@@ -4,6 +4,7 @@
 Usage:
   helper_reports.py RUN.jsonl OUT_DIR [--match TEXT] [--suffix NAME]
   helper_reports.py --helpers DIR OUT_DIR [--match TEXT] [--suffix NAME]
+      [--pair [--pair-map FILE]]
 
 For every helper transcript in RUN/subagents/ (or DIR), writes:
   OUT_DIR/<helper>.brief.md      the first message the helper got: its brief, word for word

@@ -114,8 +114,8 @@ owner's word. If the next round can't launch without a missing part, such as the
 treat the request as a rerun.
 
 - **Additions,** not breaks: missing Jobs or a missing Coverage line, written from the
-  thing and the scenarios as they stand. A missing Card, target, Publishing line (from any line that
-  settles it), way to reach the thing, or brief. Missing evaluators: one on the session's
+  thing and the scenarios as they stand. A missing Card, target, Publishing line (from
+  any line that settles it), way to reach the thing, or brief. Missing evaluators: one on the session's
   model, written as its alias and effort; for a prompt dry run, the production model if
   The thing names one. Open decisions in the log (disagreements Step 5 logged, not open
   proposals, which evaluators may raise until the owner decides) missing from Settled
@@ -190,12 +190,14 @@ spec. Every round sends it word for word to every evaluator, with only the run's
 details (such as a scratch folder path) added at the top: a reworded brief can move the
 score as much as a fix can. Those added lines are the **launch preamble**. Write them
 once, save them in the Checkpoint with a placeholder for each part that changes by round
-or evaluator, and send them word for word too. Filling a placeholder (a path, a round number) is
-routine; changing anything else in them is a break, like changing the brief. Record the
-launch in the Checkpoint before briefing the evaluators, and add the name the tool gives
-each one once the call returns. Save each report beside the log as it returns, and delete
-those files once the round is logged, so a later session can pick the round up and no
-later evaluator finds them. Point the evaluators at the thing as it is now, with this
+or evaluator, and send them word for word too. Filling a placeholder (a path, a round
+number) is routine; changing anything else in them is a break, like changing the brief.
+Record the launch in the Checkpoint before briefing the evaluators, and add the name the
+tool gives
+each one once the call returns. Save each report as it returns, outside the folders
+evaluators are pointed to, since another evaluator in the round may still be running;
+the Checkpoint records where. Delete those files once the round is logged, so a later
+session can pick the round up and no later evaluator finds them. Point the evaluators at the thing as it is now, with this
 run's fixes: the draft when fixes aren't live (a preview link, a branch, a local copy),
 never the live version without them or a copy from an earlier round. When an earlier run
 left fixes in a draft, Step 1 names which version this run starts from.
@@ -269,8 +271,8 @@ stage the Checkpoint records, and repeats only what it can't confirm:
   go on from Step 5 with the saved reports, and verify again any fix the log doesn't show
   as verified.
 
-With no round in hand recorded, look for reports the log doesn't show before starting a
-round.
+With no round in hand recorded, look where the Checkpoint says reports are saved for any
+the log doesn't show before starting a round.
 
 ## Step 7: Loop or stop
 

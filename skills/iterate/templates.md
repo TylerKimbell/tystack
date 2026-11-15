@@ -130,7 +130,8 @@ progress; where the starting version and the fixes are>
 
 **Checkpoint:** <for the runner, never sent to evaluators.
 Launch: the exact lines added above the brief, with a placeholder for each part that
-changes by round or evaluator; the agent type; how each evaluator is named; the scratch folder pattern.
+changes by round or evaluator; the agent type; how each evaluator is named; the scratch
+folder pattern; where reports are saved as they return.
 Round in hand: its number and stage (checks run, evaluators launched, reports in, fixes
 under way), or "none". The exact version of the thing and of each fixture the round uses:
 a commit, or each file's hash. Each required check: passed, failed, or skipped and why,
@@ -148,9 +149,8 @@ with its tags, who raised it, and what changed or why not; how many high-impact 
 fixes were applied; where the primary places the next point (the thing or the test);
 proposals and open decisions with their status (open, accepted, declined); effects on
 other flows; cost (tokens or time, where the tools report it); what wasn't covered within
-the flow (the jobs the flow leaves out are in its Coverage line). When
-an entry is condensed to one line, keep its date, score, progress (yes or no), and main
-change.>
+the flow (the jobs the flow leaves out are in its Coverage line). When an entry is
+condensed to one line, keep its date, score, progress (yes or no), and main change.>
 ```
 
 ## Flow cards
