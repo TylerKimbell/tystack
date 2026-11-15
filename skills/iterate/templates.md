@@ -13,6 +13,7 @@ route doesn't use.
 | The thing | yes | if new | if missing | yes | yes |
 | Where the spec will live | if unclear | | | if unclear | if unclear |
 | The flow and its card | yes | yes | | yes | best fit, plus others |
+| Jobs and coverage | yes | yes | if missing | yes | yes |
 | Target and budget | yes | yes | yes | report only | yes, or a single pass |
 | Evaluators | yes | yes | if missing | yes | yes |
 | Publishing | yes | yes | yes | | yes |
@@ -29,6 +30,10 @@ What each field needs:
 - **Where the spec will live:** only when Step 2's rule doesn't settle it.
 - **The flow and its card:** if the user names no flow, suggest the one that fits best and
   name one or two others.
+- **Jobs and coverage:** the thing's jobs, then which of them this flow's scenarios
+  exercise and which they never touch, as Step 2 sets out. Say in one line what a score
+  from this flow will and won't speak for, and name the flow that would cover the largest
+  job left out.
 - **Target and budget:** default 7/10 within 3 rounds for a new flow; on a rerun, one point
   above the last logged score, even across a break, within 2 rounds. Take the user's
   numbers, however large, and fill a missing one from the default. Never run more than
@@ -64,6 +69,7 @@ Copy it and fill in every line by the end of Step 4. In a new spec, Settled deci
 
 ## The thing
 <What it is, who uses it, what it's for, and how an evaluator reaches it.>
+**Jobs:** <the handful of things it exists to do, from the thing itself>
 
 ## Guardrails
 **In scope:** <what evaluators judge>
@@ -82,6 +88,7 @@ Copy it and fill in every line by the end of Step 4. In a new spec, Settled deci
 ## Flow: <name>
 **Card:** <user walkthrough, lens review, skill dry run, prompt dry run, or custom>
 **Who and what:** <the user and their job, or the reviewer and their lens>
+**Coverage:** <the jobs these scenarios exercise; the jobs they never touch>
 **Target and budget:** <such as 7/10 within 3 rounds, or report only>
 **Evaluators:** <the panel as aliases and effort, with the primary marked; for a prompt dry
 run, also the production model>
@@ -140,7 +147,8 @@ scenarios covered; every evaluator's score and sub-scores; check results; each f
 with its tags, who raised it, and what changed or why not; how many high-impact [direct]
 fixes were applied; where the primary places the next point (the thing or the test);
 proposals and open decisions with their status (open, accepted, declined); effects on
-other flows; cost (tokens or time, where the tools report it); what wasn't covered. When
+other flows; cost (tokens or time, where the tools report it); what wasn't covered within
+the flow (the jobs the flow leaves out are in its Coverage line). When
 an entry is condensed to one line, keep its date, score, progress (yes or no), and main
 change.>
 ```
