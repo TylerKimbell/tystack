@@ -41,7 +41,7 @@ beside it in `iterate-log.md` or `<thing>.iterate-log.md`.
 | No spec yet | Step 1 in full. |
 | A spec, but no section for this flow | Step 1 for the flow only: reuse the spec's shared parts. |
 | A spec with this flow ("run it again") | Step 1 with the Rerun column, then "Rerun a flow" in Step 2. |
-| A run under way ("continue", and the Run state doesn't say it ended) | Bring the spec up to date (Step 2), read the Run state and the latest entry, check the stop rules in Step 7, and if none holds, go on from Step 4. |
+| A run under way ("continue", and the Run state doesn't say it ended) | Read the Run state, the Checkpoint, and the latest entry. Fill what the log lacks (Step 2) and leave the spec alone. If the Checkpoint shows a round in hand, pick it up as Step 6 says. Otherwise check the stop rules in Step 7, and if none holds, go on from Step 4, launching as the Checkpoint says. |
 | "Review X", "what's wrong with X", or a lens named without a target or rounds ("review the styling") | Step 1 with a **report only** budget: one round, no fixes. |
 | "Make this better" without rounds | Step 1, offering the best-fitting flow with the default budget, and a single pass as the alternative. |
 | A single defect with a clear done state | Say in one line it isn't an iterate job, then reproduce, fix, and verify it as usual; deploying the fix to a live thing still needs a go-ahead. If a spec exists, offer to add a line to its Checks that would catch it, and to the thing's own test tool if it has one. |
@@ -81,7 +81,8 @@ up to twelve pieces for a lens. If a new flow judges something the shared In sco
 cover, widen it; each evaluator still judges only what its flow's Who and what covers.
 
 Write each flow's section before its first round, and change it only on purpose. A change
-to its scenarios, questions, rubric, evaluators, or brief is a **break in comparability**:
+to its scenarios, questions, rubric, evaluators, or brief, or to what the launch preamble
+(Step 4) tells evaluators, is a **break in comparability**:
 log it, and make the first scored round after it a new baseline. A baseline sets the best
 score, makes progress only if you apply one of its high-impact [direct] findings, and
 restarts rule 3's window in Step 7. Adding a settled decision is not a break.
@@ -96,15 +97,22 @@ restarts rule 3's window in Step 7. Adding a settled decision is not a break.
    since the latest baseline, or "none yet" if item 2 logged a break. Go to Step 4, and
    number the round after the last logged one.
 
-**Bring a spec up to date.** On a rerun or a run under way, fill what the skeletons ask
-for that the spec lacks, and log all of it in one entry before the next round.
+**Bring a spec up to date.** On a rerun, fill what the skeletons ask for that the spec or
+log lacks, and log all of it in one entry before the next round. On a run under way, fill
+only the log (a missing Run state or Checkpoint) and leave the spec as the last round's
+evaluators read it: mid-run, what they may raise changes only through Step 5 or the
+owner's word. If the next round can't launch without a missing part, such as the brief,
+treat the request as a rerun.
 
 - **Additions,** not breaks: a missing Card, target, Publishing line (from any line that
   settles it), way to reach the thing, or brief. Missing evaluators: one on the session's
   model, written as its alias and effort; for a prompt dry run, the production model if
-  The thing names one. Open decisions in the log missing from Settled decisions, marked
-  "pending the owner". A log inside the spec, moved to its own file. A missing Run state,
-  written from the entries. A missing starting version: the version before the baseline's
+  The thing names one. Open decisions in the log (disagreements Step 5 logged, not open
+  proposals, which evaluators may raise until the owner decides) missing from Settled
+  decisions, marked "pending the owner". A log inside the spec, moved to its own file. A
+  missing Run state or Checkpoint, written from the entries with each guess marked; if
+  the earlier launch lines can't be recovered, the new ones name paths only, and earlier
+  rounds compare loosely. A missing starting version: the version before the baseline's
   fixes if history has it; otherwise log that the comparison can't run. Earlier rounds
   without a recorded brief compare only loosely.
 - **Breaks:** missing anchors, sub-score definitions, or the rubric's "a judgement, not an
@@ -133,7 +141,9 @@ flow needs more. Log a new check in the next round's entry of the flow that need
 Before the run's first round, on every route except report only, save the **starting
 version** of the thing for Step 7's comparison: a commit that already exists, a copy in the
 run's scratch folder, or screenshots where a copy isn't possible. Before every round, run the checks and
-reset the fixtures as the spec says. Then brief new subagents that haven't seen earlier
+reset the fixtures as the spec says. Write in the log's Checkpoint, right away, the exact
+version of the thing and of each fixture they ran on, and whether each required check
+passed, failed, or was skipped. Then brief new subagents that haven't seen earlier
 rounds, so they judge the thing and not your memory of it.
 
 **Evaluators.** One by default: the session's model at the session's effort. A panel has at
@@ -168,7 +178,14 @@ is a finding.
 Write the brief once from the template, before the flow's first round, and save it in the
 spec. Every round sends it word for word to every evaluator, with only the run's own
 details (such as a scratch folder path) added at the top: a reworded brief can move the
-score as much as a fix can. Point the evaluators at the thing as it is now, with this
+score as much as a fix can. Those added lines are the **launch preamble**. Write them
+once, save them in the Checkpoint with a placeholder for each part that changes by round
+or evaluator, and send them word for word too. Filling a placeholder (a path, a round number) is
+routine; changing anything else in them is a break, like changing the brief. Record the
+launch in the Checkpoint before briefing the evaluators, and add the name the tool gives
+each one once the call returns. Save each report beside the log as it returns, and delete
+those files once the round is logged, so a later session can pick the round up and no
+later evaluator finds them. Point the evaluators at the thing as it is now, with this
 run's fixes: the draft when fixes aren't live (a preview link, a branch, a local copy),
 never the live version without them or a copy from an earlier round. When an earlier run
 left fixes in a draft, Step 1 names which version this run starts from.
@@ -209,7 +226,40 @@ The flow's first scored round is its baseline.
 Keep the log short enough to read before a round: the baseline and the last three rounds in
 full, each older round as one line (date, score, progress, main change), and open
 proposals in full until the owner decides. Then update the flow's Run state line in the
-log.
+log, and its Checkpoint where anything it holds has changed.
+
+The **Checkpoint** is for whoever runs the next round, in this session or a new one. It
+holds what the spec and the entries don't: how evaluators are launched, where the checks
+stand, how fixes are made and verified here, and how the before-and-after comparison is
+set up. Evaluators never read the log, so nothing in it reaches them.
+
+**Pick up a round in hand.** A session that didn't start the round resumes it from the
+stage the Checkpoint records, and repeats only what it can't confirm:
+
+- **Checks run, not launched:** if the thing and the fixtures still match the recorded
+  versions and every required check passed, launch. Otherwise rerun the checks that
+  failed, were skipped, or ran on another version, and record them again.
+- **Evaluators launched:** the launch is recorded before the call, so the record alone
+  doesn't show that an evaluator ran. Recover the saved reports first, and use each one
+  written against the recorded version. Then ask the tool for the status of every
+  evaluator whose report is missing:
+  - Running: wait for it.
+  - Finished: take its report from the tool's record.
+  - Never started, or failed without a usable report: brief a fresh one, once.
+  - The tool can't tell: write that in the Checkpoint and don't brief another, since it
+    could be a duplicate. Count it as returning no report: log the round as incomplete,
+    with the strongest evaluator whose report is in hand as that round's primary. With no
+    report in hand, end the run under rule 7.
+
+  Reports for another version, with no fix logged since, don't count: log that and run
+  the round again.
+- **Reports in, or fixes under way:** on a report-only budget, log the round and give the
+  report-only summary as Step 4 says; skip Step 5 and leave the thing untouched. Otherwise
+  go on from Step 5 with the saved reports, and verify again any fix the log doesn't show
+  as verified.
+
+With no round in hand recorded, look for reports the log doesn't show before starting a
+round.
 
 ## Step 7: Loop or stop
 
@@ -270,3 +320,7 @@ Then write the final summary for the user:
   stand-ins, a different panel), or a different target or budget.
 - Open decisions, cost, and what no round could check.
 - If another flow should run next, which and why.
+- If the next run will follow a pause longer than the prompt cache lasts (often an hour
+  or less), that it can start in a new session: the spec and log carry what it needs, and
+  after such a pause a long session is read again in full. Without a pause, a new session
+  saves nothing.

@@ -33,7 +33,10 @@ What each field needs:
   above the last logged score, even across a break, within 2 rounds. Take the user's
   numbers, however large, and fill a missing one from the default. Never run more than
   one round without a limit. If the target is above 8 or more than 2 points above the last
-  score, say the run may stop early on a plateau, and go ahead.
+  score, say the run may stop early on a plateau, and go ahead. On a rerun in a long
+  session that has sat idle longer than the prompt cache lasts (often an hour or less),
+  add that a new session is an option: the spec and log carry what it needs, and after
+  such a pause the long session is read again in full. Length alone is no reason.
 - **Evaluators:** as Step 4 sets out; name the panel and the primary.
 - **Publishing:** only when fixes would or might reach people using the thing: live each
   round, live when the run ends, or a draft for the owner. For a draft, say where it lives
@@ -106,8 +109,9 @@ Sub-scores:
 
 ## Log skeleton
 
-A separate file beside the spec. In a new log, Run state reads "not started" and the
-entries read "None yet".
+A separate file beside the spec. In a new log, Run state reads "not started", and the
+Checkpoint and the entries read "None yet". Keep the Checkpoint in full; it is never
+condensed.
 
 ```markdown
 # Iterate log: <the thing>
@@ -116,6 +120,20 @@ entries read "None yet".
 **Run state:** <rounds used of this run's budget; the primary's best score since the
 latest baseline (for progress) and for the whole run (for rule 4); last round that made
 progress; where the starting version and the fixes are>
+
+**Checkpoint:** <for the runner, never sent to evaluators.
+Launch: the exact lines added above the brief, with a placeholder for each part that
+changes by round or evaluator; the agent type; how each evaluator is named; the scratch folder pattern.
+Round in hand: its number and stage (checks run, evaluators launched, reports in, fixes
+under way), or "none". The exact version of the thing and of each fixture the round uses:
+a commit, or each file's hash. Each required check: passed, failed, or skipped and why,
+with any figures. Once launched: each evaluator, when its launch was recorded, the name
+the tool gave it once the call returned ("none yet" means the launch isn't confirmed),
+and where its report is saved.
+Fixing: how changes are made and verified here (commands, work copies, how often a
+measurement is repeated), and the owner's standing instructions for running things.
+Comparison: how each version is shown to the comparing evaluator, and its model and
+effort.>
 
 <Rounds, newest last. Each entry: date; round number; evaluators and the primary;
 scenarios covered; every evaluator's score and sub-scores; check results; each finding
