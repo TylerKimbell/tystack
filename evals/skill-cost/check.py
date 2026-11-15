@@ -70,6 +70,17 @@ def accounting(root):
         result = cli("run_tokens.py", run, "--rates", rates, *extra)
         total = re.search(r"(?m)^  TOTAL .*?\$\s*([0-9.]+)", result.stdout)
         yield name, result.returncode == 0 and total is not None and float(total[1]) == 12.25
+    transcript(run, user(0, "/earlier task"), assistant(1, 4_000_000, "earlier"), user(2, "/audit"),
+               main, main, user(6, "Later task", origin={"kind": "human"}),
+               assistant(6, 3_000_000, "on boundary"), later)
+    result = cli("run_tokens.py", run, "--rates", rates, "--after", moment(2))
+    total = re.search(r"(?m)^  TOTAL .*?\$\s*([0-9.]+)", result.stdout)
+    whole = cli("run_tokens.py", run, "--rates", rates, "--before", moment(6))
+    whole_total = re.search(r"(?m)^  TOTAL .*?\$\s*([0-9.]+)", whole.stdout)
+    yield "start a run partway through a session", (
+        result.returncode == 0 and total is not None and float(total[1]) == 12.25
+        and whole_total is not None and float(whole_total[1]) > 12.25
+    )
     transcript(run, user(1, "/audit"), main)
     result = cli("run_tokens.py", run, "--rates", ROOT / "skills/skill-cost/references/rates.example.json")
     yield "reject placeholder rate sheet", result.returncode != 0 and "placeholder" in result.stderr.lower()

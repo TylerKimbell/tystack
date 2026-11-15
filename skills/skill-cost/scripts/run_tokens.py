@@ -2,7 +2,7 @@
 """Token totals, and optionally a cost, for Claude Code runs and their helper agents.
 
 Usage:
-  run_tokens.py RUN.jsonl [--before TIMESTAMP] [--detail] [--reads N] [--timeline] [--rates FILE]
+  run_tokens.py RUN.jsonl [--after TIMESTAMP] [--before TIMESTAMP] [--detail] [--reads N] [--timeline] [--rates FILE]
       One run: the main session plus the helper transcripts in RUN/subagents/.
   run_tokens.py --helpers DIR [--match TEXT] [--rates FILE]
       Only helper transcripts in DIR (a subagents/ folder) whose description contains
@@ -10,8 +10,10 @@ Usage:
       that ran the test, not in the run being compared.
 
 Counting rules:
-- A run is counted from its start up to, but excluding, --before (an ISO timestamp
-  with a time zone) or the first later message explicitly marked as human.
+- A run is counted from its start, or from --after (inclusive) when the run begins
+  partway through a session, up to, but excluding, --before or the first later message
+  explicitly marked as human. Both take an ISO timestamp with a time zone. Helpers are
+  counted inside the same window.
 - Usage is deduplicated by message id: a streamed reply logs the same usage once per
   content block.
 - "Context" for a call is input + cache write + cache read. "First" is the first call's
@@ -125,7 +127,7 @@ def describe_input(name, inp):
     return json.dumps(inp)[:110] if inp else ""
 
 
-def tally(entries, cutoff=None):
+def tally(entries, cutoff=None, start=None):
     """Sum one transcript's usage per model, and collect its tool-result sizes."""
     calls = {}                   # message id -> (model, usage, timestamp)
     tools = {}                   # tool_use id -> (name, what it read)
@@ -138,6 +140,8 @@ def tally(entries, cutoff=None):
     for d in entries:
         ts = d.get("timestamp")
         if cutoff and ts and timestamp(ts) >= cutoff:
+            continue
+        if start and ts and timestamp(ts) < start:
             continue
         if ts:
             first_ts = first_ts or ts
@@ -292,13 +296,15 @@ def models_line(models):
 
 # --- Reports ----------------------------------------------------------------------
 
-def report_run(path, detail, reads, timeline, rates, before):
+def report_run(path, detail, reads, timeline, rates, before, after=None):
     entries = load(path)
-    cut = before if before is not None else cutoff_for(entries)
-    main = tally(entries, cut)
+    scoped = [d for d in entries
+              if not (after and d.get("timestamp") and timestamp(d["timestamp"]) < after)]
+    cut = before if before is not None else cutoff_for(scoped)
+    main = tally(entries, cut, after)
     helpers = []
     for sp in sorted(glob.glob(os.path.join(os.path.splitext(path)[0], "subagents", "*.jsonl"))):
-        helper = tally(load(sp), cut)
+        helper = tally(load(sp), cut, after)
         if helper["usages"]:
             helpers.append((meta_description(sp) or os.path.basename(sp), helper))
 
@@ -318,8 +324,10 @@ def report_run(path, detail, reads, timeline, rates, before):
     print(f"{os.path.basename(path)[:8]}  {start[:16]} -> {end[11:16]} UTC  "
           f"cut={'yes' if cut else 'no'}  helpers={len(helpers)}  "
           f"main first context {main['first']:,}  peak {main['peak']:,}")
-    if cut is None:
+    if cut is None and after is None:
         print("  Whole transcript counted: verify the run ends there or supply --before.")
+    elif cut is None:
+        print("  Counted from --after to the end: verify the run ends there or supply --before.")
     missing = m_missing | h_missing
     print("  main   ", fmt(mt, m_cost, m_missing), " models:", models_line(main["models"]))
     print("  helpers", fmt(ht, h_cost, h_missing))
@@ -402,13 +410,18 @@ def main():
     ap.add_argument("--timeline", action="store_true",
                     help="one line per main-session call: context, cache write, output, tools")
     ap.add_argument("--rates", help="JSON rates file; adds a cost column")
+    ap.add_argument("--after", type=timestamp,
+                    help="inclusive run start, for a run that begins partway through a session "
+                         "(ISO timestamp with a time zone)")
     ap.add_argument("--before", type=timestamp, help="exclusive run cutoff (ISO timestamp with a time zone)")
     ap.add_argument("--helpers", metavar="DIR", help="total helper transcripts in DIR instead")
     ap.add_argument("--match", help="with --helpers: only descriptions containing this text")
     args = ap.parse_args()
     utf8_output()
-    if args.before is not None and args.helpers:
-        ap.error("--before applies to a run transcript, not --helpers")
+    if (args.before is not None or args.after is not None) and args.helpers:
+        ap.error("--after and --before apply to a run transcript, not --helpers")
+    if args.before is not None and args.after is not None and args.after >= args.before:
+        ap.error("--after must be earlier than --before")
 
     rates = None
     if args.rates:
@@ -428,7 +441,7 @@ def main():
     if args.helpers:
         report_helpers(args.helpers, args.match, rates)
     elif args.run:
-        report_run(args.run, args.detail, args.reads, args.timeline, rates, args.before)
+        report_run(args.run, args.detail, args.reads, args.timeline, rates, args.before, args.after)
     else:
         ap.error("give a run transcript, or --helpers DIR")
 
