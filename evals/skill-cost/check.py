@@ -81,6 +81,14 @@ def accounting(root):
         result.returncode == 0 and total is not None and float(total[1]) == 12.25
         and whole_total is not None and float(whole_total[1]) > 12.25
     )
+    note = {"type": "attachment", "timestamp": moment(2), "attachment": {"type": "late-note"}}
+    transcript(run, user(0, "/earlier task"), assistant(1, 4_000_000, "earlier"), note,
+               user(2, "/audit"), main)
+    windowed = cli("run_tokens.py", run, "--detail", "--after", moment(2))
+    yield "leave the opening context out of a run that starts partway through", (
+        windowed.returncode == 0 and "late-note" not in windowed.stdout
+        and "not listed with --after" in windowed.stdout
+    )
     transcript(run, user(1, "/audit"), main)
     result = cli("run_tokens.py", run, "--rates", ROOT / "skills/skill-cost/references/rates.example.json")
     yield "reject placeholder rate sheet", result.returncode != 0 and "placeholder" in result.stderr.lower()

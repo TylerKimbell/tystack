@@ -47,8 +47,8 @@ blank line, then the spec's Brief unchanged:
 "Scratch folder for this round: `<scratch folder outside the repository>/round<N>/` (create it). Your final message is the report."
 Round in hand: none (run ended).
 Fixing: edit `skills/skill-cost/SKILL.md` and `references/helper-contract.md`
-directly. After every change run, from the repository root: `py -3 evals/skill-cost/check.py --report`
-(14 of 14 must pass), `py -3 -m py_compile` on the three scripts, and confirm every file
+directly. After every change run, from the repository root: `python3 evals/skill-cost/check.py --report`
+(16 of 16 must pass), `python3 -m py_compile` on the three scripts, and confirm every file
 `SKILL.md` names exists.
 Comparison: one fresh `opus`, medium evaluator gets the starting and final `SKILL.md` and
 `helper-contract.md` as X and Y (random order), plus the six scenarios, questions and the

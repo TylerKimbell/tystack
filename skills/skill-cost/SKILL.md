@@ -17,8 +17,9 @@ losing anything the skill should catch. Measure first, change second: nothing ab
 skill, its briefs, or its schedule changes until the user has seen the numbers and picked
 a change, and every test before that is read-only.
 
-Two requests belong elsewhere: this session's own usage goes to `explain-usage`, and making
-a skill's results better goes to `iterate`. Say so in a line and stop.
+Two requests belong elsewhere: this session's own usage goes to the agent's own usage
+report (in Claude, `explain-usage`; where there is none, say so), and making a skill's
+results better goes to `iterate`. Say so in a line and stop.
 
 The scripts in `scripts/` read Claude Code transcripts. In Codex or another agent, use
 the run records you can access. A complete comparison needs verified run boundaries,

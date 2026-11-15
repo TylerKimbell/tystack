@@ -349,7 +349,12 @@ def report_run(path, detail, reads, timeline, rates, before, after=None):
               "(left out of the cost)")
 
     if detail:
-        if main["opening"]:
+        if after is not None:
+            # The window opens partway through the session, so attachments logged in it
+            # are not what the session started with.
+            print("  opening context: not listed with --after; run without it for the "
+                  "session's starting context")
+        elif main["opening"]:
             print("  opening context before the first call (chars, by kind):")
             for kind, n in sorted(main["opening"].items(), key=lambda x: -x[1]):
                 print(f"    {kind:40} {n:>9,}")
