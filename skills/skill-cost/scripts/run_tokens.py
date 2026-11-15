@@ -2,7 +2,7 @@
 """Token totals, and optionally a cost, for Claude Code runs and their helper agents.
 
 Usage:
-  run_tokens.py RUN.jsonl [--detail] [--reads N] [--timeline] [--rates FILE]
+  run_tokens.py RUN.jsonl [--before TIMESTAMP] [--detail] [--reads N] [--timeline] [--rates FILE]
       One run: the main session plus the helper transcripts in RUN/subagents/.
   run_tokens.py --helpers DIR [--match TEXT] [--rates FILE]
       Only helper transcripts in DIR (a subagents/ folder) whose description contains
@@ -10,8 +10,8 @@ Usage:
       that ran the test, not in the run being compared.
 
 Counting rules:
-- A run is counted from its start up to the first later message a person typed, so
-  follow-up conversation in the same session is left out.
+- A run is counted from its start up to, but excluding, --before (an ISO timestamp
+  with a time zone) or the first later message explicitly marked as human.
 - Usage is deduplicated by message id: a streamed reply logs the same usage once per
   content block.
 - "Context" for a call is input + cache write + cache read. "First" is the first call's
@@ -31,6 +31,8 @@ import json
 import os
 import sys
 from collections import defaultdict
+from datetime import datetime
+from math import isfinite
 
 USAGE_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens",
               "output_tokens")
@@ -77,6 +79,23 @@ def context(u):
     return sum(u.get(k) or 0 for k in USAGE_KEYS[:3])
 
 
+def cache_split(usage):
+    written = usage.get("cache_creation_input_tokens") or 0
+    split = usage.get("cache_creation") or {}
+    split_keys = ("ephemeral_5m_input_tokens", "ephemeral_1h_input_tokens")
+    if not any(key in split for key in split_keys):
+        return 0, 0, written
+    hour = min(written, split.get("ephemeral_1h_input_tokens") or 0)
+    return written - hour, hour, 0
+
+
+def timestamp(value):
+    time = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if time.utcoffset() is None:
+        raise ValueError("timestamp must include a time zone")
+    return time
+
+
 def cutoff_for(entries):
     """Timestamp of the first message a person typed after the opening one, or None."""
     seen_first = False
@@ -91,8 +110,9 @@ def cutoff_for(entries):
         if not seen_first:
             seen_first = True
             continue
-        if (d.get("origin") or {}).get("kind") == "human":
-            return d["timestamp"]
+        origin = (d.get("origin") or {}).get("kind") or d.get("turnOrigin")
+        if origin == "human" and d.get("timestamp"):
+            return timestamp(d["timestamp"])
     return None
 
 
@@ -117,8 +137,8 @@ def tally(entries, cutoff=None):
     first_ts = last_ts = None
     for d in entries:
         ts = d.get("timestamp")
-        if cutoff and ts and ts > cutoff:
-            break
+        if cutoff and ts and timestamp(ts) >= cutoff:
+            continue
         if ts:
             first_ts = first_ts or ts
         if d.get("type") == "cost-state" and d.get("totalCostUSD") is not None:
@@ -160,8 +180,10 @@ def tally(entries, cutoff=None):
         t["calls"] += 1
         for k in USAGE_KEYS:
             t[k] += u.get(k) or 0
-        split = u.get("cache_creation") or {}
-        t["write_1h"] += split.get("ephemeral_1h_input_tokens") or 0
+        five, hour, unknown = cache_split(u)
+        t["write_5m"] += five
+        t["write_1h"] += hour
+        t["write_unknown"] += unknown
         first = first or context(u)
         peak = max(peak, context(u))
         timeline.append((ts, context(u), u.get("cache_creation_input_tokens") or 0,
@@ -204,15 +226,24 @@ def rate_for(rates, model):
     return None
 
 
+def valid_price(value):
+    return type(value) in (int, float) and isfinite(value) and value >= 0
+
+
+def cache_price(model_rates, rates, key, shared=None):
+    if key in model_rates:
+        return model_rates[key]
+    if shared and shared in model_rates:
+        return model_rates[shared]
+    multiplier = rates.get(f"{key}_multiplier", rates.get(f"{shared}_multiplier") if shared else None)
+    base = model_rates.get("input")
+    return base * multiplier if valid_price(base) and valid_price(multiplier) else None
+
+
 def cost(usages, rates):
-    """Cost of a list of (model, usage) pairs at the given rates, and models with no rate."""
+    """Price the categories that have a rate and identify every unpriced category."""
     if not rates:
         return None, set()
-    # Global multipliers of the input price, used where a model gives no price of its own.
-    flat = rates.get("cache_write_multiplier")
-    mult_5m = rates.get("cache_write_5m_multiplier", flat or 1.25)
-    mult_1h = rates.get("cache_write_1h_multiplier", flat or 2.0)
-    read_mult = rates.get("cache_read_multiplier", 0.1)
     dollars, missing = 0.0, set()
     for model, u in usages:
         r = rate_for(rates, model)
@@ -224,26 +255,35 @@ def cost(usages, rates):
         long = r.get("long_context")
         if long and context(u) > long["above_tokens"]:
             r = long
-        inp, out = r["input"], r["output"]
-        write_5m = r.get("cache_write_5m", r.get("cache_write", inp * mult_5m))
-        write_1h = r.get("cache_write_1h", r.get("cache_write", inp * mult_1h))
-        read = r.get("cache_read", inp * read_mult)
-        # Each call's usage says how many written tokens went to the 1-hour cache; the rest
-        # are 5-minute writes. Older transcripts without the split count as 5-minute.
-        written = u.get("cache_creation_input_tokens") or 0
-        hour = min(written, (u.get("cache_creation") or {}).get("ephemeral_1h_input_tokens") or 0)
-        dollars += ((u.get("input_tokens") or 0) * inp
-                    + (written - hour) * write_5m + hour * write_1h
-                    + (u.get("cache_read_input_tokens") or 0) * read
-                    + (u.get("output_tokens") or 0) * out) / 1e6
+        write_5m = cache_price(r, rates, "cache_write_5m", "cache_write")
+        write_1h = cache_price(r, rates, "cache_write_1h", "cache_write")
+        five, hour, unknown = cache_split(u)
+        charges = [
+            ("input", u.get("input_tokens"), r.get("input")),
+            ("output", u.get("output_tokens"), r.get("output")),
+            ("cache_read", u.get("cache_read_input_tokens"), cache_price(r, rates, "cache_read")),
+            ("cache_write_5m", five, write_5m),
+            ("cache_write_1h", hour, write_1h),
+            ("cache_write_duration_unknown", unknown, write_5m if write_5m == write_1h else None),
+        ]
+        for category, tokens, price in charges:
+            if tokens:
+                if valid_price(price):
+                    dollars += tokens * price / 1e6
+                else:
+                    missing.add(f"{model}/{category}")
     return dollars, missing
 
 
-def fmt(t, dollars=None):
+def fmt(t, dollars=None, missing=()):
     line = (f"calls {t['calls']:4}  in {t['input_tokens']:>9,}  "
             f"cache_write {t['cache_creation_input_tokens']:>10,}  "
             f"cache_read {t['cache_read_input_tokens']:>12,}  out {t['output_tokens']:>8,}")
-    return line + (f"  ${dollars:8.2f}" if dollars is not None else "")
+    if dollars is not None:
+        line += f"  ${dollars:8.2f}"
+        if missing:
+            line += " (partial cost)"
+    return line
 
 
 def models_line(models):
@@ -252,16 +292,15 @@ def models_line(models):
 
 # --- Reports ----------------------------------------------------------------------
 
-def report_run(path, detail, reads, timeline, rates):
+def report_run(path, detail, reads, timeline, rates, before):
     entries = load(path)
-    cut = cutoff_for(entries)
+    cut = before if before is not None else cutoff_for(entries)
     main = tally(entries, cut)
     helpers = []
     for sp in sorted(glob.glob(os.path.join(os.path.splitext(path)[0], "subagents", "*.jsonl"))):
-        se = load(sp)
-        if cut and se and se[0].get("timestamp", "") > cut:
-            continue
-        helpers.append((meta_description(sp) or os.path.basename(sp), tally(se, cut)))
+        helper = tally(load(sp), cut)
+        if helper["usages"]:
+            helpers.append((meta_description(sp) or os.path.basename(sp), helper))
 
     mt = total(main["models"])
     ht = defaultdict(int)
@@ -279,13 +318,16 @@ def report_run(path, detail, reads, timeline, rates):
     print(f"{os.path.basename(path)[:8]}  {start[:16]} -> {end[11:16]} UTC  "
           f"cut={'yes' if cut else 'no'}  helpers={len(helpers)}  "
           f"main first context {main['first']:,}  peak {main['peak']:,}")
-    print("  main   ", fmt(mt, m_cost), " models:", models_line(main["models"]))
-    print("  helpers", fmt(ht, h_cost))
-    print("  TOTAL  ", fmt(grand, None if m_cost is None else m_cost + h_cost))
+    if cut is None:
+        print("  Whole transcript counted: verify the run ends there or supply --before.")
+    missing = m_missing | h_missing
+    print("  main   ", fmt(mt, m_cost, m_missing), " models:", models_line(main["models"]))
+    print("  helpers", fmt(ht, h_cost, h_missing))
+    print("  TOTAL  ", fmt(grand, None if m_cost is None else m_cost + h_cost, missing))
     written = grand["cache_creation_input_tokens"]
     if written:
-        print(f"  cache writes: {grand['write_1h']:,} at the 1-hour rate, "
-              f"{written - grand['write_1h']:,} at the 5-minute rate")
+        print(f"  cache writes: {grand['write_1h']:,} at 1 hour, {grand['write_5m']:,} at 5 minutes, "
+              f"{grand['write_unknown']:,} duration unknown")
     if main["recorded"] is not None:
         print(f"  Claude Code recorded ${main['recorded']:.2f} for this session "
               "(at its own prices; compare with the computed total)")
@@ -294,7 +336,6 @@ def report_run(path, detail, reads, timeline, rates):
         print(f"  failed tool calls: {len(errors)} (retries and lookups often follow them)")
         for ts, name, what in errors[:10]:
             print(f"    {(ts or '')[11:19]}  {name:16} {what}")
-    missing = m_missing | h_missing
     if missing:
         print("  no rate for:", ", ".join(sorted(str(m) for m in missing)),
               "(left out of the cost)")
@@ -310,8 +351,10 @@ def report_run(path, detail, reads, timeline, rates):
         print("  helpers:")
         for desc, h in helpers:
             t = total(h["models"])
-            c, _ = cost(h["usages"], rates)
+            c, absent = cost(h["usages"], rates)
             money = f" ${c:.2f}" if c is not None else ""
+            if absent:
+                money += " (partial cost)"
             print(f"    {desc[:56]:56} calls {t['calls']:3} first {h['first']:>7,} "
                   f"peak {h['peak']:>7,} cache_read {t['cache_read_input_tokens']:>10,} "
                   f"out {t['output_tokens']:>7,}{money}  {models_line(h['models'])}")
@@ -337,13 +380,14 @@ def report_helpers(folder, match, rates):
         t = total(h["models"])
         add(grand, t)
         usages += h["usages"]
-        rows.append((desc, t, cost(h["usages"], rates)[0], h))
+        c, missing = cost(h["usages"], rates)
+        rows.append((desc, t, c, missing, h))
     if not rows:
         sys.exit(f"No helper transcripts in {folder}" + (f" matching {match!r}" if match else ""))
-    for desc, t, c, h in rows:
-        print(f"  {desc[:48]:48} {fmt(t, c)}  first {h['first']:,}  peak {h['peak']:,}")
+    for desc, t, c, missing, h in rows:
+        print(f"  {desc[:48]:48} {fmt(t, c, missing)}  first {h['first']:,}  peak {h['peak']:,}")
     c, missing = cost(usages, rates)
-    print(f"  {'TOTAL':48} {fmt(grand, c)}")
+    print(f"  {'TOTAL':48} {fmt(grand, c, missing)}")
     if missing:
         print("  no rate for:", ", ".join(sorted(str(m) for m in missing)))
 
@@ -358,19 +402,33 @@ def main():
     ap.add_argument("--timeline", action="store_true",
                     help="one line per main-session call: context, cache write, output, tools")
     ap.add_argument("--rates", help="JSON rates file; adds a cost column")
+    ap.add_argument("--before", type=timestamp, help="exclusive run cutoff (ISO timestamp with a time zone)")
     ap.add_argument("--helpers", metavar="DIR", help="total helper transcripts in DIR instead")
     ap.add_argument("--match", help="with --helpers: only descriptions containing this text")
     args = ap.parse_args()
     utf8_output()
+    if args.before is not None and args.helpers:
+        ap.error("--before applies to a run transcript, not --helpers")
 
     rates = None
     if args.rates:
         with open(args.rates, encoding="utf-8") as f:
             rates = json.load(f)
+        if not isinstance(rates, dict) or not isinstance(rates.get("models"), dict) or not rates["models"]:
+            ap.error("rates file must contain model prices")
+        if rates.get("as_of") == "YYYY-MM-DD":
+            ap.error("rates file contains the placeholder date; fill in the current prices and date")
+        for model, entry in rates["models"].items():
+            if not isinstance(entry, dict):
+                ap.error(f"rates for {model} must be an object")
+            if "long_context" in entry:
+                tier = entry["long_context"]
+                if not isinstance(tier, dict) or not valid_price(tier.get("above_tokens")):
+                    ap.error(f"long_context for {model} needs a nonnegative above_tokens threshold")
     if args.helpers:
         report_helpers(args.helpers, args.match, rates)
     elif args.run:
-        report_run(args.run, args.detail, args.reads, args.timeline, rates)
+        report_run(args.run, args.detail, args.reads, args.timeline, rates, args.before)
     else:
         ap.error("give a run transcript, or --helpers DIR")
 

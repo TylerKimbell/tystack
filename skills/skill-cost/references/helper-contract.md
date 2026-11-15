@@ -2,18 +2,16 @@
 
 Load this when the chosen change moves a skill's source reading onto a smaller model. The
 pattern: helpers on the small model read sources and report facts in fixed lines; the main
-session, on the larger model, makes every judgment from those lines. It is safe because
-the small model does retrieval, which it does well, and never interpretation, where its
-mistakes are silent: a weak helper that dismisses an item lets a cursor move past it, and
-nothing ever shows it again.
+session, on the larger model, makes every judgment from those lines. Check retrieval
+coverage in the comparison: a helper that omits an item can let a cursor move past it.
 
 ## Split by judgment, not by step
 
 Go through what each helper does today and sort it:
 
 - **Retrieval** (list, page, search, read, extract fields): the small model.
-- **Mechanical work** with exact settings in the brief (publish a page from given content,
-  run a script): the small model, and the main session checks the result.
+- **Mechanical work** with exact settings in the brief (run a read-only script): the
+  small model, and the main session checks the result.
 - **Interpretation** (is a reply owed, is this a task, is this mail suspicious, is this new
   information): the main session, always.
 

@@ -13,6 +13,7 @@ route doesn't use.
 | The thing | yes | if new | if missing | yes | yes |
 | Where the spec will live | if unclear | | | if unclear | if unclear |
 | The flow and its card | yes | yes | | yes | best fit, plus others |
+| Jobs and coverage | yes | yes | if missing | yes | yes |
 | Target and budget | yes | yes | yes | report only | yes, or a single pass |
 | Evaluators | yes | yes | if missing | yes | yes |
 | Publishing | yes | yes | yes | | yes |
@@ -29,11 +30,18 @@ What each field needs:
 - **Where the spec will live:** only when Step 2's rule doesn't settle it.
 - **The flow and its card:** if the user names no flow, suggest the one that fits best and
   name one or two others.
+- **Jobs and coverage:** the thing's jobs, then which of them this flow's scenarios
+  exercise and which they never touch, as Step 2 sets out. Say in one line what a score
+  from this flow will and won't speak for, and name the flow that would cover the largest
+  job left out.
 - **Target and budget:** default 7/10 within 3 rounds for a new flow; on a rerun, one point
   above the last logged score, even across a break, within 2 rounds. Take the user's
   numbers, however large, and fill a missing one from the default. Never run more than
   one round without a limit. If the target is above 8 or more than 2 points above the last
-  score, say the run may stop early on a plateau, and go ahead.
+  score, say the run may stop early on a plateau, and go ahead. On a rerun in a long
+  session that has sat idle longer than the prompt cache lasts (often an hour or less),
+  add that a new session is an option: the spec and log carry what it needs, and after
+  such a pause the long session is read again in full. Length alone is no reason.
 - **Evaluators:** as Step 4 sets out; name the panel and the primary.
 - **Publishing:** only when fixes would or might reach people using the thing: live each
   round, live when the run ends, or a draft for the owner. For a draft, say where it lives
@@ -61,6 +69,7 @@ Copy it and fill in every line by the end of Step 4. In a new spec, Settled deci
 
 ## The thing
 <What it is, who uses it, what it's for, and how an evaluator reaches it.>
+**Jobs:** <the handful of things it exists to do, from the thing itself>
 
 ## Guardrails
 **In scope:** <what evaluators judge>
@@ -79,6 +88,7 @@ Copy it and fill in every line by the end of Step 4. In a new spec, Settled deci
 ## Flow: <name>
 **Card:** <user walkthrough, lens review, skill dry run, prompt dry run, or custom>
 **Who and what:** <the user and their job, or the reviewer and their lens>
+**Coverage:** <the jobs these scenarios exercise; the jobs they never touch>
 **Target and budget:** <such as 7/10 within 3 rounds, or report only>
 **Evaluators:** <the panel as aliases and effort, with the primary marked; for a prompt dry
 run, also the production model>
@@ -106,8 +116,9 @@ Sub-scores:
 
 ## Log skeleton
 
-A separate file beside the spec. In a new log, Run state reads "not started" and the
-entries read "None yet".
+A separate file beside the spec. In a new log, Run state reads "not started", and the
+Checkpoint and the entries read "None yet". Keep the Checkpoint in full; it is never
+condensed.
 
 ```markdown
 # Iterate log: <the thing>
@@ -117,14 +128,29 @@ entries read "None yet".
 latest baseline (for progress) and for the whole run (for rule 4); last round that made
 progress; where the starting version and the fixes are>
 
+**Checkpoint:** <for the runner, never sent to evaluators.
+Launch: the exact lines added above the brief, with a placeholder for each part that
+changes by round or evaluator; the agent type; how each evaluator is named; the scratch
+folder pattern; where reports are saved as they return.
+Round in hand: its number and stage (checks run, evaluators launched, reports in, fixes
+under way), or "none". The exact version of the thing and of each fixture the round uses:
+a commit, or each file's hash. Each required check: passed, failed, or skipped and why,
+with any figures. Once launched: each evaluator, when its launch was recorded, the name
+the tool gave it once the call returned ("none yet" means the launch isn't confirmed),
+and where its report is saved.
+Fixing: how changes are made and verified here (commands, work copies, how often a
+measurement is repeated), and the owner's standing instructions for running things.
+Comparison: how each version is shown to the comparing evaluator, and its model and
+effort.>
+
 <Rounds, newest last. Each entry: date; round number; evaluators and the primary;
 scenarios covered; every evaluator's score and sub-scores; check results; each finding
 with its tags, who raised it, and what changed or why not; how many high-impact [direct]
 fixes were applied; where the primary places the next point (the thing or the test);
 proposals and open decisions with their status (open, accepted, declined); effects on
-other flows; cost (tokens or time, where the tools report it); what wasn't covered. When
-an entry is condensed to one line, keep its date, score, progress (yes or no), and main
-change.>
+other flows; cost (tokens or time, where the tools report it); what wasn't covered within
+the flow (the jobs the flow leaves out are in its Coverage line). When an entry is
+condensed to one line, keep its date, score, progress (yes or no), and main change.>
 ```
 
 ## Flow cards
