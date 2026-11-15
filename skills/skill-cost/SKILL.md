@@ -17,8 +17,16 @@ losing anything the skill should catch. Measure first, change second: nothing ab
 skill, its briefs, or its schedule changes until the user has seen the numbers and picked
 a change, and every test before that is read-only.
 
-The scripts are in this skill's `scripts/` folder. They read Claude Code transcripts. In
-another agent, measure from whatever usage records it keeps and follow the same steps.
+The scripts in `scripts/` read Claude Code transcripts. In Codex or another agent, use
+the run records you can access. A complete comparison needs verified run boundaries,
+main and helper usage with a model and token categories for each, and equivalent inputs
+and outputs for the two sides. Pricing additionally needs rates for each model and cache
+category used. If a record is missing, report the run time and measured fields you have,
+name the unavailable fields, and label any subtotal with its coverage. For example, main
+session aggregates alone support a main-session usage report. Full cost is unknown if
+helper usage is missing, and equivalence is unverified without the replay inputs and
+outputs. Keep the partial audit useful and name the smallest record or export that would
+complete it. Continue with steps the evidence supports.
 
 ## Step 1: Find the runs
 
@@ -48,8 +56,13 @@ completion notice, which may never come.
 python3 <skill dir>/scripts/run_tokens.py <run>.jsonl --detail --reads 15 --rates <file>
 ```
 
-It counts a run from its start to the first later message a person typed, deduplicates
-usage by message id, and splits calls, cache writes, cache reads, output, and context into
+It counts a run from its start up to the first later message marked as human, excluding
+that message. Check the cutoff against the intended run. If a follow-up is part of the
+same job or the automatic boundary is absent or wrong, supply the verified exclusive
+end with `--before <ISO timestamp with time zone>`. Use the whole transcript only after
+checking that it contains only the run. If the boundary is unknown, label the result as
+partial or whole-session usage as appropriate. The script deduplicates usage by message
+id and splits calls, cache writes, cache reads, output, and context into
 the main session and its helpers, by model. Show one table with one row per run and the
 same columns every time, so later measurements compare directly. Note the spread between
 runs: one run is not a baseline. For a scheduled skill, add a monthly line: cost per run
@@ -61,8 +74,11 @@ in from the `claude-api` skill (its prompt-caching notes have the cache-write an
 cache-read prices, which differ by model and by 5-minute or 1-hour cache) or the
 provider's pricing page, and pass it with `--rates`. Never price from memory. The script
 prices 5-minute and 1-hour cache writes apart and prints the cost Claude Code recorded for
-the session: if the two disagree, fix the rates before going on. On a subscription plan,
-call the result a relative cost, not a bill.
+the session. Compare recorded and computed costs only for the same time window and scope.
+If the figures disagree, check the window, missing models, cache breakdown, and rates
+before using the estimate. A cost with missing prices is a subtotal. If the cache-write
+duration is unknown and the two rates differ, exclude those writes from the priced total
+and disclose the gap. On a subscription plan, call the result a relative cost, not a bill.
 
 ## Step 3: Find what drives the cost
 
@@ -129,14 +145,23 @@ cursor or "last read" mark, and publishes nothing.
    Give each rerun a description with a common prefix, such as "Candidate: <name>".
 3. When every rerun has finished, save them next to the originals:
    `helper_reports.py --helpers <this session's subagents folder> <scratch>/ab --match "Candidate:" --suffix candidate --pair`.
+   Check that each candidate pairs with the original it reran. If briefs are too similar
+   or changed, map candidate transcript IDs to the original output names with
+   `--pair-map <file.json>`. Base the map on the replay record, never the report contents.
 4. Compare coverage: `report_keys.py --pattern '<one alternative per key shape the
    reports use>' --pair <scratch>/ab current candidate`. Check one report's count by eye.
+   An unmatched report makes the comparison incomplete. Resolve the missing report or
+   explain the gap in the result. A paired subtotal does not establish full coverage.
 5. Read both sides item by item for what keys can't show: judgment calls the candidate
    made that it shouldn't, items it dropped, and whether it said `partial` honestly. Note
    confounds, such as the reference run having already updated records, so "already
    recorded" claims can't be compared.
 6. Price both sides: `run_tokens.py --helpers <folder> --match <prefix> --rates <file>`
-   for each.
+   for each. Check that each total covers the same helpers as its report set. Recommend
+   adopting the change only when the comparison accounts for both sides, material
+   coverage and judgment hold, and the measured saving justifies the change. If the
+   candidate missed a material item, keep the current setup, fix the candidate, and rerun
+   the comparison before recommending it.
 
 **A change to the main session** (combined runs, early exit, trims, exact queries): make
 the change on a copy or a branch and run the skill in its read-only or dry-run mode on the

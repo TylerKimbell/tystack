@@ -6,8 +6,9 @@ Usage:
   report_keys.py --pattern REGEX --pair DIR SUFFIX_A SUFFIX_B
 
 With one file, prints its sorted unique keys. With two, prints how many each has and
-which keys only one side cites. --pair compares every <name>.SUFFIX_A.md in DIR with
-<name>.SUFFIX_B.md beside it (the files helper_reports.py writes) and totals the sides.
+which keys only one side cites. --pair checks both sides for unmatched reports, prints
+their keys, and exits with status 2 when reports are missing. Its subtotal covers only
+matched reports (the files helper_reports.py writes).
 
 A key is whatever identifies one source item in the reports: a message, thread, ticket,
 or document id. There is no default pattern, because a loose one silently miscounts:
@@ -51,6 +52,35 @@ def compare(a, b, pat, label_a, label_b, show=True):
     return len(ka), len(kb), len(only_a), len(only_b)
 
 
+def reports(folder, suffix):
+    ending = f".{suffix}.md"
+    return {os.path.basename(path)[:-len(ending)]: path
+            for path in glob.glob(os.path.join(glob.escape(folder), "*" + glob.escape(ending)))}
+
+
+def compare_pairs(folder, sa, sb, pat):
+    first, second = reports(folder, sa), reports(folder, sb)
+    if not (first or second):
+        print("INCOMPLETE: no reports found for either suffix")
+        return 2
+    totals = [0, 0, 0, 0]
+    for name in sorted(first.keys() & second.keys()):
+        for i, count in enumerate(compare(first[name], second[name], pat, sa, sb)):
+            totals[i] += count
+    for present, other, label, missing_label in ((first, second, sa, sb), (second, first, sb, sa)):
+        for name in sorted(present.keys() - other.keys()):
+            found = sorted(keys(present[name], pat))
+            print(f"{name}: no {missing_label} report; {len(found)} keys in {label}:")
+            for key in found:
+                print(f"    {key}")
+    print(f"PAIRED SUBTOTAL: {sa} {totals[0]}, {sb} {totals[1]}, only {sa} {totals[2]}, "
+          f"only {sb} {totals[3]}")
+    if first.keys() != second.keys():
+        print("INCOMPLETE: the subtotal excludes unmatched reports")
+        return 2
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -65,16 +95,9 @@ def main():
 
     if args.pair:
         folder, sa, sb = args.pair
-        totals = [0, 0, 0, 0]
-        for a in sorted(glob.glob(os.path.join(folder, f"*.{sa}.md"))):
-            b = a[: -len(f".{sa}.md")] + f".{sb}.md"
-            if not os.path.exists(b):
-                print(f"{os.path.basename(a)}: no {sb} report to compare")
-                continue
-            for i, n in enumerate(compare(a, b, pat, sa, sb)):
-                totals[i] += n
-        print(f"TOTAL: {sa} {totals[0]}, {sb} {totals[1]}, only {sa} {totals[2]}, "
-              f"only {sb} {totals[3]}")
+        if sa == sb:
+            ap.error("--pair requires two distinct suffixes")
+        return compare_pairs(folder, sa, sb, pat)
     elif len(args.files) == 1:
         found = sorted(keys(args.files[0], pat))
         print(f"{len(found)} keys")
@@ -87,4 +110,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
