@@ -3,7 +3,7 @@ name: skill-cost
 description: >-
   Measure what a skill costs to run and make it cheaper without losing quality. Totals
   tokens across a skill's recent runs and their helper agents, finds what drives the cost,
-  ranks changes cheapest first, and tests the chosen change side by side, read-only,
+  ranks changes by net saving against risk, and tests the chosen change side by side, read-only,
   before anything is edited. Use for "audit how many tokens <skill> used", "is <skill>
   too expensive", "make <skill> cheaper", "find ways to optimize <skill>", "should the
   helpers run on a smaller model", or "dry run cheaper helpers". Not for this session's
@@ -16,6 +16,10 @@ Find out what a skill's runs cost, where the cost goes, and which change cuts it
 losing anything the skill should catch. Measure first, change second: nothing about the
 skill, its briefs, or its schedule changes until the user has seen the numbers and picked
 a change, and every test before that is read-only.
+
+Two requests belong elsewhere: this session's own usage goes to the agent's own usage
+report (in Claude, `explain-usage`; where there is none, say so), and making a skill's
+results better goes to `iterate`. Say so in a line and stop.
 
 The scripts in `scripts/` read Claude Code transcripts. In Codex or another agent, use
 the run records you can access. A complete comparison needs verified run boundaries,
@@ -59,7 +63,9 @@ python3 <skill dir>/scripts/run_tokens.py <run>.jsonl --detail --reads 15 --rate
 It counts a run from its start up to the first later message marked as human, excluding
 that message. Check the cutoff against the intended run. If a follow-up is part of the
 same job or the automatic boundary is absent or wrong, supply the verified exclusive
-end with `--before <ISO timestamp with time zone>`. Use the whole transcript only after
+end with `--before <ISO timestamp with time zone>`. When the run begins partway through
+a session, such as a second job in a long one, give its first message's time with
+`--after`; helpers are counted inside the same window. Use the whole transcript only after
 checking that it contains only the run. If the boundary is unknown, label the result as
 partial or whole-session usage as appropriate. The script deduplicates usage by message
 id and splits calls, cache writes, cache reads, output, and context into
@@ -82,7 +88,9 @@ and disclose the gap. On a subscription plan, call the result a relative cost, n
 
 ## Step 3: Find what drives the cost
 
-From the `--detail`, `--reads`, and `--timeline` output:
+Start with where the money went: main session and helpers, each split into cache writes,
+cache reads, output, and any full rewrite of the context after a pause. Then, from the
+`--detail`, `--reads`, and `--timeline` output:
 
 - **Fixed starting context** of the main session and of each helper (the "first" figure):
   every call pays it again. `--detail` lists its parts (skill listings, tool lists,
@@ -96,33 +104,68 @@ From the `--detail`, `--reads`, and `--timeline` output:
   (`wc -c` on the skill's files).
 - **Single large reads:** whole files where a slice would do, a page read before a
   publish, a long thread.
-- **Each helper's share** and the model it runs on.
+- **Each part's share and the model it runs on:** the main session and each helper. Count
+  the main session's calls by kind (judgment or fixes, fixed commands, fixed-format
+  writes, status messages): a large share on the largest model is a driver in itself.
 - **Separate sessions** for work that could share one: each pays the fixed context again.
 
 Tie each driver to the line in the skill that causes it (`grep` the skill for the rule
 that loads the file or starts the helper), so every suggestion points at a line. Some
 drivers come from the setup the skill runs in, not the skill: the agent's own starting
 context, the cache duration, a schedule's timing. Report those separately, as outside the
-skill.
+skill. When a step of the skill triggers a setup cost, such as a question that waits past
+the cache lifetime, name the step as the skill's lever and the cost as the setup's.
 
-## Step 4: Propose changes, cheapest first
+## Step 4: Propose changes, by net saving against risk
 
-List the changes that fit what Step 3 found, ranked by saving against risk, and say which
-half each one cuts (main session or helpers) and what it needs to work:
+If the request was only an audit ("how many tokens did it use"), or a run costs so little
+that no change could repay a test, give the Step 2 table, say plainly that nothing is worth
+changing, and stop here: no verdicts, no list.
 
-| Change | Needs |
-|---|---|
-| Move helpers' reading to a smaller model | Helper agents, and work split by judgment: see `references/helper-contract.md` |
-| Combine runs that start separate sessions | Work that can run in one session |
-| Exit early when there is nothing new | A cheap check that can tell |
-| Trim or split references the main session loads | Rules that load less, or load parts on demand |
-| Script or slice large reads | A read the skill does the same way each run |
-| Hand a large one-off read to a helper | A read whose result can be summarized |
-| Spell out exact queries and field names | Retries or lookups in the transcript |
-| Narrow, merge, or reorder schedules | Runs that end with nothing to do, or that overlap |
-| Cut starting context outside the skill | Settings the user controls; the user's call |
+If the user named a change, work that one out first: net it as below, answer yes or no with
+the arithmetic, say what would change the answer, and name the Step 5 test that would
+settle it; until then it is an estimate. Then go on to the rest.
 
-Then ask the user which to try first, as one question. Don't edit anything yet.
+Go through every row of this table against what Step 3 found. Give each a verdict: it fits,
+it doesn't apply and why, or the figures can't tell, with the output that would settle it
+(`--timeline`, `--reads`). A row is ruled out by the evidence, never by skipping it.
+
+| Change | Needs | Adds (count it against the saving) |
+|---|---|---|
+| Run the main session on a smaller model | A main session whose share is large; say what the test must show (for a session that writes fixes, their quality) | Rework if quality drops |
+| Move the main session's fixed-command and fixed-format calls to a smaller model or a helper | A count of those calls from Step 3 | The helper's starting context, and handing it what it needs |
+| Run one reviewer or helper of several on a smaller model | A panel or set of helpers; say what the test must show (the same high-impact findings) | Findings it would miss |
+| Move helpers' reading to a smaller model | Reading that can be split from judgment: see `references/helper-contract.md`. Where the reading is the judgment (a reviewer looking at screenshots), this doesn't fit. A smaller model may narrow searches or drop items, so the test checks coverage | Judgment that moves back to the main session |
+| Read shared material once and pass it on | Several helpers that open the same files | The context of whoever now holds it |
+| Start a new session where the cache has expired | A pause longer than the cache lifetime, and a hand-over smaller than the context it replaces. Without a pause, price the rebuild in full (the cold start, rereading the skill, its records and its sources, and the context the new session builds back) and expect a net near zero: don't propose it on removed reads alone. The same goes for splitting separate jobs that run back to back | The new session's starting context written to cache, everything it must reread, and the context it then rebuilds |
+| Combine runs that start separate sessions | Work that can run in one session | A larger context on every later call |
+| Exit early when there is nothing new | A cheap check that can tell | The check, on every run |
+| Drop calls that do no work | Status-only or waiting messages in the timeline | Nothing |
+| Drop or shrink a role whose output isn't used | A reviewer or helper whose results agree with another's or are rarely acted on | Whatever it did catch; the user's call |
+| Trim or split references the main session loads | Rules that load less, or load parts on demand | Loads on demand |
+| Script or slice large reads | A read the skill does the same way each run | The script's upkeep |
+| Hand a large one-off read to a helper | A read whose result can be summarized | The helper's starting context |
+| Spell out exact queries and field names | Retries or lookups in the transcript | Nothing |
+| Narrow, merge, or reorder schedules | Runs that end with nothing to do, or that overlap | Later results on the dropped runs |
+| Cut starting context outside the skill | Settings the user controls; the user's call | Nothing |
+
+Write each change that fits in this form, ranked by net saving against risk, and say which
+half it cuts (main session or helpers):
+
+- **Removes:** the tokens or calls that go away, priced.
+- **Adds:** what the change brings with it, priced, from the table's last column.
+- **Net:** removes minus adds. Never give the removed figure alone as the saving.
+- **Unmeasured:** what the figures above assume.
+- **Test:** which Step 5 test would settle it. Until then it is an estimate.
+
+Changes interact: net each one as if those ranked above it were already adopted. When
+parts of a change rest on different evidence, such as a new session after a pause and a
+new session without one, write them as separate entries, never one net for both.
+
+If no change would save more over the next ten runs than its test costs (a main-session
+test costs about one run; a helper test about the helpers' share of one), say plainly that
+nothing is worth changing, and stop. Otherwise ask the user which to try first, as one
+question. Don't edit anything yet.
 
 ## Step 5: Test the change side by side
 
@@ -183,7 +226,8 @@ and check the skill's state files and any repository it touches are unchanged.
 
 Keep it plain and short; offer more detail rather than leading with it.
 
-- A cost table: the runs from Step 2, and the test's two sides, at the same rates.
+- A cost table: the runs from Step 2, and the test's two sides, at the same rates. Say
+  when the sample is thin (fewer than five runs).
 - What the change missed or got wrong, item by item, each tied to its fix: a wrong
   judgment moves that call back to the main session; a skipped read becomes one line in
   the brief; a report that runs long gets a tighter line format.
