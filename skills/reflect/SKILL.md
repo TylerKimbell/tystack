@@ -35,7 +35,9 @@ every message the user typed, the agent's replies, one line per tool call (with 
 command, a helper agent's model and brief, and the questions and buttons put to the user),
 the user's answers, errors, and a list of files the session wrote. It drops tool output, so
 a multi-megabyte transcript comes out around 2% of its size. A user message that matches a
-button label on the line before it is the user choosing that button.
+button label on the line before it is the user choosing that button. A turn headed
+"prompt sent through the SDK" came from an app or a script built on Claude Code; in an
+app it is what the user typed, so treat it as the user's message.
 Read the transcript even for the current session: what you remember may have been
 summarized, and the transcript has everything.
 
