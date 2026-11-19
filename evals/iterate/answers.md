@@ -4,11 +4,11 @@ For the runner only. Evaluators never open this file, and nothing in it goes int
 or the launch lines.
 
 It gives the expected outcome for each scenario with one right answer under the skill's
-current text: 5, 6, 7, and 8. Scenarios 1 to 4 have no section; they are judged on the
+current text: 5 to 9. Scenarios 1 to 4 have no section; they are judged on the
 evaluators' reports alone.
 
 **How to use it.** After every report in the round has returned, compare each evaluator's
-`scenario-5.md` to `scenario-8.md` with the matching section below. A mismatch is a
+`scenario-5.md` to `scenario-9.md` with the matching section below. A mismatch is a
 finding to check against the skill's rule text: either the skill is unclear (a fix to the
 skill, tagged and handled in Step 5 as usual) or this key is wrong (fix the key, and say
 so). Log each mismatch and what you concluded in the round's entry. A mismatch never
@@ -123,3 +123,30 @@ primary, and the run goes on from Step 5 with `sonnet`'s report.
 Wrong: briefing a fresh `opus` (the "never started" branch), relaunching the round or
 rerunning the checks, discarding `sonnet`'s report, ending the run under rule 7, checking
 the stop rules before picking up the round, or asking the user.
+
+## Scenario 9
+
+The two requests take different review rows of the route table.
+
+(a) "Review the onboarding page." A bare review: no lens, point of view, flow, or rounds,
+and iterate isn't named. The row "Any other review" applies.
+
+- A quick opinion, not an iterate job: answer it directly.
+- No spec, brief, log, or score, and `templates.md` isn't loaded.
+- Offer a report-only round if the user wants a score they can rerun.
+
+Wrong: starting Step 1, writing a spec, or running a report-only round before the user
+takes the offer.
+
+(b) "Review the onboarding page as a manager whose new hire starts Monday." A review that
+names a point of view, with no target or rounds, not of code or a pull request. The
+report-only row applies. "No spec yet" fits too, and the narrow form wins.
+
+- Load `templates.md` and send the Step 1 message with the Report only column: the target
+  and budget field says report only, and the message asks for no target and no publishing.
+- Wait for the reply, then write the spec's flow section, the brief, and the log as
+  usual.
+- One round, no fixes. No starting version is saved, since the route is report only.
+
+Wrong: answering it as a quick opinion, asking for a target, rounds, or publishing, or
+applying fixes.

@@ -81,9 +81,9 @@ The skills follow your project's instructions (`AGENTS.md`, `CLAUDE.md`, or a ho
 
 ## Change a skill
 
-Each skill is a `SKILL.md`, plus supporting files it loads (such as `iterate`'s `templates.md` or `reflect`'s `scripts/digest.py`) and `agents/openai.yaml` for Codex settings where needed. Bump `version` in `.claude-plugin/plugin.json` when you change behavior, so installed copies pick up the update. Check the manifests with `claude plugin validate .`.
+Each skill is a `SKILL.md`, plus supporting files it loads (such as `iterate`'s `templates.md` or `reflect`'s `scripts/digest.py`) and `agents/openai.yaml` for Codex settings where needed. `evals/<skill>/` holds the `iterate` spec, fixtures, and checks for improving a skill with `iterate`. Claude never loads these files as part of a skill.
 
-`evals/<skill>/` holds the `iterate` spec, fixtures, and checks for improving a skill with `iterate`. Claude never loads these files as part of a skill. Run `python3 evals/<skill>/check.py` before each round.
+[`AGENTS.md`](AGENTS.md) holds the rules for a change: what belongs here, which files change together (a behavior change bumps `version` in `.claude-plugin/plugin.json`), and the checks to run. CI runs those checks on each push and pull request.
 
 ## License
 

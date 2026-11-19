@@ -89,3 +89,9 @@ run). Fixes: uncommitted in the tystack working tree.
   command ran (the digest now prints "Bash (in <folder>)"); the description said reflect
   isn't for saving a preference while the body handles it (description now says it saves
   a memory instead).
+- **2026-11-18 and 2026-11-19, outside a run.** `digest.py --results N` prints tool output,
+  clipped to N characters, for a finding that rests on what a call returned; Step 3 says
+  when to use it. Output comes after the calls of the message that made them, in call
+  order, each labelled with its tool and what the call was for, and an error is never
+  clipped shorter than the default 300 characters. `fixtures/sample-session.jsonl`, an
+  invented session, lets `check.py` test the digest in every clone. Not scored.

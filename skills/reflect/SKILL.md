@@ -104,8 +104,9 @@ For the chosen thread, write down what the transcript shows, citing turn numbers
 The digest shows that a tool ran, not what it returned. When a finding rests on the
 output (a check's result, a number the session measured, a helper agent's report, the
 page a step read), rerun the digest for those turns with `--results 2000`. That prints
-each call's output under its line, clipped to that many characters; `--results 0` prints
-all of it. Keep `--turns` on the rerun, since output is most of a transcript's size. If the
+each call's output after the calls of the message that made them, in call order, each
+labelled with its tool and what the call was for, clipped to that many characters;
+`--results 0` prints all of it. Keep `--turns` on the rerun, since output is most of a transcript's size. If the
 output isn't in the transcript either, the finding is a gap.
 
 Use only what the transcript shows. Where you infer, say so. A gap stays a gap and becomes

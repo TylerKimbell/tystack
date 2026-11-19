@@ -38,7 +38,7 @@ renaming it, changing the flow model, or changing the report format.
 - `fixtures/progress-spec.md`: a long run that is still making progress, for scenario 7.
 - `fixtures/resume-spec.md` and `fixtures/resume-log.md`: a spec in the current layout and
   its run log, with a round in hand at the stage "evaluators launched", for scenario 8.
-- `answers.md`: the expected outcome for scenarios 5 to 8, for the runner only. After the
+- `answers.md`: the expected outcome for scenarios 5 to 9, for the runner only. After the
   reports return, the runner compares each evaluator's answers with it, as the file says.
 - A scratch folder for the evaluator's output: a new empty temporary folder each round,
   outside this repository. That's the reset; nothing in the repository changes during a
@@ -51,7 +51,7 @@ that the skill's frontmatter has the right name and a description under 1024 cha
 that `templates.md` exists and the skill mentions it, that the plugin manifests are valid
 JSON, that the README has a row for the skill, that every fixture this spec names exists,
 that the run log lives only in `iterate-log.md`, and that `answers.md` exists with a section
-for each of scenarios 5 to 8.
+for each of scenarios 5 to 9.
 
 ---
 
@@ -97,6 +97,10 @@ another scenario says about the same page.
    hash; no `opus` report is saved anywhere; and asked about the `opus` evaluator, the tool
    that launches evaluators has no record of it, because it can't see subagents an earlier
    session launched. Decide what happens to round 4.
+9. **Two reviews.** Two separate requests about the onboarding page, each in a new session,
+   with no spec for the page and iterate not named: (a) "Review the onboarding page." (b)
+   "Review the onboarding page as a manager whose new hire starts Monday." Say how each
+   one is routed.
 
 ### Questions at each scenario
 
@@ -155,7 +159,7 @@ The runner adds two lines at the top: the repository root and the scratch folder
 > Don't run rounds, spawn subagents, open a browser, or use any tool other than reading
 > files and writing in the scratch folder.
 >
-> **For each of the eight scenarios** in the dry-run section, follow the skill as if the
+> **For each of the nine scenarios** in the dry-run section, follow the skill as if the
 > user had just sent that request, and write `scenario-N.md` in the scratch folder with:
 > 1. The questions you'd ask the user before starting, or "none" and why.
 > 2. The spec you'd write for the flow (for scenario 4, what you'd change in the existing
@@ -167,7 +171,9 @@ The runner adds two lines at the top: the repository root and the scratch folder
 > way: write what you do next and why, naming any rule you apply. For scenario 8, say what
 > happens to the round in hand and to each evaluator's report. If you stop, write the final
 > summary. If you continue, say what the next step or round does and whether you contact
-> the user. Where a scenario needs facts you don't have, such as the
+> the user. For scenario 9, write which route each request takes and why, then items 1 to
+> 4 for a request that starts an iterate run, or what you'd do instead for one that
+> doesn't. Where a scenario needs facts you don't have, such as the
 > page itself, invent a plausible stand-in and mark it as invented.
 >
 > **Then report, in about 700 words:**

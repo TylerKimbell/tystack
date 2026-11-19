@@ -1,6 +1,6 @@
 ---
 name: unslop
-description: "Cut AI-writing tells (puffery, filler, AI vocabulary, em dashes, chatbot phrases) and add human voice. Use when writing or editing prose for a person to read (docs, READMEs, PR descriptions, commit messages, emails, status updates, posts) or when asked to de-slop or humanize text. Not for code, logs, or data."
+description: "Cut AI-writing tells (puffery, filler, AI vocabulary, em dashes, chatbot phrases) and add human voice. Use when writing or editing prose for a person to read (docs, READMEs, PR descriptions, commit messages, emails, status updates, posts) or when asked to de-slop or humanize text, review it for AI tells, or say whether it reads as AI-written. Not for code, logs, or data."
 ---
 
 # Unslop

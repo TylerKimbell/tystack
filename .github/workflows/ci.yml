@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# These checks read repository files and need no write access.
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Repository checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+
+      # Every skill with an evals folder has a check.py that uses the standard library.
+      # The loop runs them all, so one failure does not hide another. Checks that need
+      # the private fixtures in evals/<skill>/local/ skip those parts here.
+      - name: Run each skill's eval checks
+        run: |
+          failed=0
+          for check in evals/*/check.py; do
+            echo "::group::$check"
+            python3 "$check" || { failed=1; failures="$failures $check"; }
+            echo "::endgroup::"
+          done
+          for check in $failures; do
+            echo "::error::$check failed"
+          done
+          exit "$failed"
+
+      # The validator needs no sign-in. Its version is not pinned, so the manifests are
+      # checked against the rules Claude Code applies now. The log names the version, so
+      # a run that changes with no change to the manifests can be traced to a release.
+      - name: Validate the plugin manifests
+        run: |
+          npm install --global @anthropic-ai/claude-code
+          claude --version
+          claude plugin validate .
