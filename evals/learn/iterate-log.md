@@ -182,3 +182,9 @@ after round 1 (rule 1), round 2 (rule 1), round 6 (rule 4), and round 7 (report 
 - 2026-11-08, after run 5: the owner kept the final text (1245 words) over the trimmed text.
 - 2026-11-08, after run 5: at the owner's request, split the goals paragraph into bullets.
   Layout only, no rule changed; not scored.
+- 2026-11-18, outside a run: a version the learner names, or one the project pins (a
+  lockfile, a manifest, a checked-out tag), is now the version taught, from its own docs
+  or source. The answer names it and where it was found, mentions the newest only where it
+  changes what the learner would do, and marks what may differ "My inference:" when only a
+  nearer version's docs can be read. Before, the skill covered only a version the learner
+  hadn't given. Not scored.
