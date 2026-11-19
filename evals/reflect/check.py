@@ -2,10 +2,10 @@
 
 Exits non-zero and names what failed, so a round never starts on a broken skill.
 
-fixtures/sample-session.jsonl is an invented session, checked everywhere. The round's
-fixtures are private transcripts in evals/reflect/local/, which git ignores. A clone
-without that folder (a fresh clone, CI) skips those checks and says so; a round still
-needs them.
+fixtures/sample-session.jsonl and fixtures/app-session.jsonl are invented sessions,
+checked everywhere. The round's fixtures are private transcripts in evals/reflect/local/,
+which git ignores. A clone without that folder (a fresh clone, CI) skips those checks and
+says so; a round still needs them.
 """
 
 import json
@@ -125,6 +125,29 @@ else:
         failures.append("--results prints two calls' output out of call order")
     if digest(SAMPLE, "--results", "-1")[0] == 0:
         failures.append("--results accepts a negative number")
+    if "sent through the SDK" in plain:
+        failures.append("digest of the sample session labels a typed turn as an SDK prompt")
+
+# A second invented session, recorded the way an app built on the Agent SDK records one:
+# the user's messages carry turnOrigin "sdk" and no origin. Every one of them is a turn.
+APP = HERE / "fixtures/app-session.jsonl"
+if not APP.is_file():
+    failures.append("evals/reflect/fixtures/app-session.jsonl is missing")
+else:
+    code, app = digest(APP)
+    for want, why in (
+        ("- User turns: 3\n", "three turns, one for each prompt sent through the SDK"),
+        ("## Turn 2: prompt sent through the SDK", "the label on a later SDK prompt"),
+        ("Keep the old anchors working.", "the text of a later SDK prompt"),
+        ("came from an app or a script", "the note that explains the label"),
+        ("(The session was compacted here.", "the note where the session was compacted"),
+        ("Command: /recap the anchors still work", "a slash command with its arguments"),
+    ):
+        if code or want not in app:
+            failures.append(f"digest of the app session lacks {why}")
+    for leak in ("SUMMARY-ONLY", "META-ONLY", "REMINDER-ONLY", "BLOCK-ONLY", "<command-"):
+        if leak in app:
+            failures.append(f"digest of the app session should leave out {leak!r}")
 
 HAVE_FIXTURES = LOCAL.is_dir()
 sessions = sorted((LOCAL / "sessions").glob("*.jsonl"))

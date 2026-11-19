@@ -2,9 +2,9 @@
 """Turn a Claude Code session transcript into a short Markdown digest for reflect.
 
 The digest keeps what reflect needs to find a reusable method: every message the user
-typed, the agent's replies, one line per tool call, and tool errors. It drops thinking,
-bookkeeping records, and, unless --results asks for it, tool output, which together are
-most of a transcript's size.
+typed, every prompt an app or a script sent through the SDK, the agent's replies, one
+line per tool call, and tool errors. It drops thinking, bookkeeping records, and, unless
+--results asks for it, tool output, which together are most of a transcript's size.
 
 Usage:
   digest.py --list [--limit N]          recent transcripts, newest first
@@ -117,8 +117,11 @@ def text_of(content):
 
 
 def is_prompt(rec):
-    """True for a plain user message: not a tool result, injected meta record, or helper."""
+    """True for a plain user message: not a tool result, an injected meta record, a
+    helper's record, or the summary a compaction leaves behind."""
     if rec.get("type") != "user" or rec.get("isMeta") or rec.get("isSidechain"):
+        return False
+    if rec.get("isCompactSummary"):
         return False
     content = rec.get("message", {}).get("content")
     if isinstance(content, list) and any(b.get("type") == "tool_result" for b in content):
@@ -137,6 +140,29 @@ def is_human(rec):
         return rec["turnOrigin"] == "human"
     # Older transcripts have neither: treat plain text without a reminder wrapper as typed.
     return not text_of(rec["message"]["content"]).strip().startswith("<")
+
+
+# A slash command or its local output, which the transcript records as a user message.
+COMMAND = re.compile(r"^<(command-name|command-message|local-command-)")
+
+# A block the harness adds to a user record: a reminder, a task notice, an event. Its
+# tag name has a hyphen, which sets it apart from markup a user pastes.
+INJECTED = re.compile(r"<([a-z]+(?:-[a-z]+)+)\b[^>]*>.*?</\1>", re.S)
+
+SDK_LABEL = "prompt sent through the SDK"
+
+
+def is_sdk_prompt(rec):
+    """True for a prompt sent through the Agent SDK. An app built on Claude Code records
+    what its user typed this way, and a script records the prompt it supplied, so every
+    one of them starts a turn. A record that holds only blocks the harness added is not
+    a prompt, though it carries the same tag."""
+    if not is_prompt(rec) or rec.get("origin") or rec.get("turnOrigin") != "sdk":
+        return False
+    text = text_of(rec["message"]["content"])
+    if COMMAND.match(REMINDER.sub("", text).strip()):
+        return False
+    return bool(INJECTED.sub("", text).strip())
 
 
 def opener_label(rec):
@@ -276,6 +302,7 @@ def build(path, max_text, turns, results=None):
     that made them, in call order, each labelled with its call."""
     title, cwd, branch, start, end = None, None, None, None, None
     out, turn = [], 0
+    sdk_turns = False  # whether any turn's prompt came through the SDK
     asks = set()     # tool_use ids of AskUserQuestion calls, to find their answers
     calls = {}       # tool_use id -> the call's label: its tool and what it was for
     queue = []       # tool_use ids whose output isn't printed yet, in call order
@@ -317,12 +344,14 @@ def build(path, max_text, turns, results=None):
             continue
 
         human = is_human(rec)
-        if human or (turn == 0 and is_prompt(rec)):
+        sdk = not human and is_sdk_prompt(rec)
+        if human or sdk or (turn == 0 and is_prompt(rec)):
             end_turn()
             turn += 1
+            sdk_turns = sdk_turns or sdk
             if in_range():
                 text = prompt_text(rec)
-                who = "user" if human else opener_label(rec)
+                who = "user" if human else SDK_LABEL if sdk else opener_label(rec)
                 out.append(f"\n## Turn {turn}: {who} ({(ts or '')[11:16]} UTC)\n")
                 out.append(text or "(empty)")
                 out.append("\n### Agent\n")
@@ -362,8 +391,10 @@ def build(path, max_text, turns, results=None):
                 out.append("(The session was compacted here. Records before it are complete.)")
             elif isinstance(content, str) and "<command-name>" in content:
                 m = re.search(r"<command-name>(.*?)</command-name>", content)
+                args = re.search(r"<command-args>(.*?)</command-args>", content, re.S)
                 if m:
-                    out.append(f"Command: {m.group(1)}")
+                    said = " ".join((args.group(1) if args else "").split())
+                    out.append(f"Command: {m.group(1)} {said}".rstrip())
         elif kind == "assistant":
             if held:
                 flush()  # output came back, so the previous message's calls are done
@@ -395,6 +426,11 @@ def build(path, max_text, turns, results=None):
         "turn's last reply. Buttons the agent offered appear on Wrap-up lines; a user",
         "message that matches a button label is that choice.",
     ]
+    if sdk_turns:
+        head += [
+            f'A turn headed "{SDK_LABEL}" came from an app or a script built on',
+            "Claude Code. In an app, it is what the user typed there.",
+        ]
     if results is None:
         head += [
             "Tool calls are one line each; their output is left out except the user's",
@@ -427,7 +463,9 @@ def list_recent(limit):
                 title = rec.get("customTitle") or rec.get("title") or title
             if not first and is_prompt(rec):
                 first = " ".join(prompt_text(rec).split())
-                if not is_human(rec):
+                if is_sdk_prompt(rec):
+                    first = f"({SDK_LABEL}) {first}"
+                elif not is_human(rec):
                     first = f"({opener_label(rec)}) {first}"
         when = datetime.fromtimestamp(os.path.getmtime(p)).strftime("%Y-%m-%d %H:%M")
         tid = os.path.basename(p)[:-6]
