@@ -301,5 +301,10 @@ last entry below logs a break, so the next scored round is a new baseline.
     spec, no Run state or Checkpoint). On a run under way the skill says to fill only the
     log and leave the spec alone, but it also lists moving an inline log out as an
     addition; the key doesn't score how scenarios 6 and 7 handle this.
+  - After review: the two review rows both claimed a review of code or a pull request
+    asked for through iterate by name. Naming iterate now takes the report-only row, and
+    the other row says iterate isn't named. Scenario 9 sends a bare review and a review
+    from a point of view, which route differently, so `answers.md` covers scenarios 5 to 9
+    and the brief covers nine scenarios.
   - **Break in comparability:** a new scenario, changed fixtures, and a changed brief and
     questions. The next scored round is a new baseline.

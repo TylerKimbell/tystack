@@ -66,12 +66,12 @@ for path in sorted(set(re.findall(r"`(fixtures/[^`]+)`", spec))):
     if not (HERE / path).is_file():
         failures.append(f"spec names missing fixture {path}")
 
-# The runner-only answer key must hold the expected outcome for scenarios 5 to 8.
+# The runner-only answer key must hold the expected outcome for scenarios 5 to 9.
 if not (HERE / "answers.md").is_file():
     failures.append("evals/iterate/answers.md is missing")
 else:
     answers = read(HERE / "answers.md")
-    for number in range(5, 9):
+    for number in range(5, 10):
         if not re.search(rf"^## Scenario {number}$", answers, re.M):
             failures.append(f"answers.md has no '## Scenario {number}' section")
 
