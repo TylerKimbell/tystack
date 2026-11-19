@@ -67,7 +67,9 @@ checks reflect's frontmatter (name, description under 1024 characters), that
 `agents/openai.yaml` names `$reflect`, that the plugin manifests parse, that the README
 has a row for reflect, that `digest.py` compiles, that its digest of
 `fixtures/sample-session.jsonl` keeps the turns, answers, errors, and written files and
-leaves tool output out until `--results` asks for it, that it digests every private
+leaves tool output out until `--results` asks for it, that `--results` prints a message's
+output in call order with each result naming its call and never clips an error shorter
+than the default, that it digests every private
 fixture transcript into at least one turn with a files section, that `local/` is ignored
 and nothing in it is tracked, and that the run log lives only in `iterate-log.md`. In a
 clone with no `local/` folder it skips the private fixture checks and says so; supply

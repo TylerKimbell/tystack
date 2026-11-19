@@ -100,7 +100,8 @@ else:
         if leak in plain:
             failures.append(f"digest of the sample session should leave out {leak!r}")
     code, full = digest(SAMPLE, "--turns", "1", "--results", "0")
-    for want in ("fetch tags: 38.9s", "14 passed in 0.8s", "Result of Bash (an error):",
+    for want in ("fetch tags: 38.9s", "14 passed in 0.8s",
+                 "Result of Bash (Run the lint's tests), an error:",
                  "expected 14 tags, got 0", "(showing [1])"):
         if code or want not in full:
             failures.append(f"--turns 1 --results 0 on the sample session lacks {want!r}")
@@ -109,6 +110,19 @@ else:
     code, clipped = digest(SAMPLE, "--turns", "3", "--results", "20")
     if code or "Slowest stage: DNS" not in clipped or "more chars]" not in clipped:
         failures.append("--results 20 on the sample session does not clip a long output")
+    code, short = digest(SAMPLE, "--turns", "1", "--results", "20")
+    if code or "expected 14 tags, got 0" not in short:
+        failures.append("--results 20 clips an error shorter than the digest's default")
+    # Turn 2 makes two Bash calls in one message, and the second one's output comes back
+    # first. Each result must name its own call, and print in call order.
+    code, pair = digest(SAMPLE, "--turns", "2", "--results", "0")
+    old = pair.find("Result of Bash (Lint the release branch with the old code):")
+    new = pair.find("Result of Bash (Lint the release branch with the new code):")
+    if code or old < 0 or new < 0:
+        failures.append("--results does not name each call in its result's label")
+    elif not (old < pair.find("before.txt: 3 findings") < new
+              < pair.find("after.txt: 3 findings")):
+        failures.append("--results prints two calls' output out of call order")
     if digest(SAMPLE, "--results", "-1")[0] == 0:
         failures.append("--results accepts a negative number")
 
