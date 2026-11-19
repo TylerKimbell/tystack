@@ -2,7 +2,7 @@
 
 tystack is a plugin of general agent skills that work in any project without setup. It runs as a plugin in claude.ai, Cowork, and Claude Code, and as plain skill folders in Codex. The repo is public.
 
-`README.md` is for people who install the skills. This file is for changing them. It is the instructions file for Claude Code and Codex; `CLAUDE.md` holds only `@AGENTS.md`. Both are for sessions in this repo. Neither ships to people who install the plugin, which is why the plugin validator warns about a `CLAUDE.md` at a plugin's root. That warning is expected.
+`README.md` is for people who install the skills. This file is for changing them. It is the instructions file for Claude Code and Codex; `CLAUDE.md` holds only `@AGENTS.md`. Both are for sessions in this repo. Neither is loaded for people who install the plugin, which is why the plugin validator warns about a `CLAUDE.md` at a plugin's root. That warning is expected.
 
 ## What belongs here
 
@@ -30,7 +30,7 @@ AGENTS.md           Instructions (this file). CLAUDE.md imports it.
 | A skill's behavior | `version` in `.claude-plugin/plugin.json`. Installed copies update only when it changes, so a behavior change with no bump reaches nobody |
 | A skill is added, renamed, or removed | The skills table in `README.md`, the descriptions in `plugin.json` and `marketplace.json`, and the install text in `README.md` that names skills |
 | How a skill runs (automatic or on request only) | `disable-model-invocation` in its `SKILL.md` for Claude, `allow_implicit_invocation` in its `agents/openai.yaml` for Codex, its row in the `README.md` table, and the install text that says how to call it |
-| A skill's name, purpose, or trigger | Its `SKILL.md` description, and `display_name`, `short_description`, and `default_prompt` in its `agents/openai.yaml` |
+| A skill's name, purpose, or trigger | Its `SKILL.md` description, and `display_name`, `short_description`, and `default_prompt` in its `agents/openai.yaml`, where the file has them |
 | A skill that has `evals/<name>/` | Run `python3 evals/<name>/check.py`, and update the spec or fixtures the change outdates |
 | A skill adapted from another project | The attribution comment in its `SKILL.md`, and the credits in `README.md` and `LICENSE` |
 
@@ -45,4 +45,4 @@ Run these before a commit. CI runs both on every push and pull request.
 
 - Commit and push only when the user asks.
 - A change goes through a branch and a pull request, merged with a merge commit. Don't push to `main`.
-- Write prose plainly: lead with the point, no filler. Run `unslop` on anything a person reads, including a skill's text, the README, a commit message, and a pull request description.
+- Write prose plainly: lead with the point, no filler. Run `unslop` on anything a person reads, including a skill's text, the README, a commit message, and a pull request description. Where the skill is not installed, read `skills/unslop/SKILL.md` and follow it.
