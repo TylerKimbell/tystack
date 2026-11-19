@@ -46,6 +46,7 @@ as in the prompt dry run card).
 
 ### Settled decisions
 - Replies sign off with the team name: the owner chose this.
+- Reply length stays as round 4 left it, pending the owner: rounds 4 and 5 disagreed.
 
 ### Brief
 (Saved; omitted from this fixture.)

@@ -1,6 +1,6 @@
 ---
 name: unslop
-description: "Cut AI-writing tells (puffery, filler, AI vocabulary, em dashes, chatbot phrases) and add human voice. Use when writing or editing prose for a person to read (docs, READMEs, PR descriptions, commit messages, emails, status updates, posts) or when asked to de-slop or humanize text. Not for code, logs, or data."
+description: "Cut AI-writing tells (puffery, filler, AI vocabulary, em dashes, chatbot phrases) and add human voice. Use when writing or editing prose for a person to read (docs, READMEs, PR descriptions, commit messages, emails, status updates, posts) or when asked to de-slop or humanize text, review it for AI tells, or say whether it reads as AI-written. Not for code, logs, or data."
 ---
 
 # Unslop
@@ -9,8 +9,10 @@ Scan for the patterns below, rewrite in the intended register, add voice, then a
 
 - Keep the meaning, facts, numbers, and caveats the reader needs. Never invent a specific, source, or opinion to replace a vague line. Cut it or flag the gap.
 - Leave code, identifiers, names, and quotations unchanged.
-- A house style guide or the user's explicit instructions win over these rules.
+- The project's instructions (`AGENTS.md`, `CLAUDE.md`), a house style guide, and the user's explicit instructions win over these rules. So does `technical-writing` when it is in use on the same text: its rules decide where the two disagree, and this skill still removes the tells.
+- When you edit part of an existing document, apply these rules to the text you write or change. Leave the rest alone unless asked to unslop all of it. Text you move or quote unchanged stays as written.
 - Asked to unslop a passage, return the rewrite. Add a line or two after it only for a cut claim or a gap the writer must fill.
+- Asked to review text, or whether it reads as AI-written, list the patterns you find and where each one is. Rewrite only when asked.
 
 ## Voice
 

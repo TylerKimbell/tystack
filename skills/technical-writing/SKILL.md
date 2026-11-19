@@ -6,7 +6,11 @@ disable-model-invocation: true
 
 # Technical writing
 
-The goal is writing a tired engineer understands on the first read. Four layers get you there, one question each: what kind of document is this (Diátaxis), how do sentences address the reader (Google developer style), how much does each sentence carry (STE), and can any sentence be read two ways (Global English). Apply all four, then apply the `unslop` skill to the result. Unslop owns the catalog of AI tells: vocabulary, filler, hedging, and formatting.
+The goal is writing a tired engineer understands on the first read. Four layers get you there, one question each: what kind of document is this (Diátaxis), how do sentences address the reader (Google developer style), how much does each sentence carry (STE), and can any sentence be read two ways (Global English). Apply all four, then apply the `unslop` skill to the result. Unslop owns the catalog of AI tells: vocabulary, filler, hedging, and formatting. If `unslop` isn't installed, finish with the review checklist and say that the pass for AI tells did not run.
+
+Two orders of precedence apply. The user's explicit instructions, the project's instructions (`AGENTS.md`, `CLAUDE.md`), its house style guide, and its templates win over this skill. This skill wins over `unslop` where the two disagree: keep the small words that fix a parse when unslop would cut them as filler, and keep the sentence limits where unslop asks for varied rhythm.
+
+Asked to review a document, report what the checklist finds: the line, the checklist item, and a proposed rewrite for each. Rewrite the document only when asked to write or fix it. When you edit part of a document, apply the rules to the text you write or change, and leave the rest alone unless asked.
 
 Three rules sit above the layers:
 

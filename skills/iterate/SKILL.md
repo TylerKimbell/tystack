@@ -32,9 +32,9 @@ page, counts as publishing: it happens only as the user allowed in Step 1.
 
 ## Route the request
 
-Load `templates.md` for every route except a single defect. Look for a spec: `iterate.md`
-or `<thing>.iterate.md` beside the thing, or wherever the user says. Its run log sits
-beside it in `iterate-log.md` or `<thing>.iterate-log.md`.
+Load `templates.md` for every route except a quick opinion or a single defect. Look for a
+spec: `iterate.md` or `<thing>.iterate.md` beside the thing, or wherever the user says.
+Its run log sits beside it in `iterate-log.md` or `<thing>.iterate-log.md`.
 
 | Request | What to do |
 |---|---|
@@ -42,13 +42,14 @@ beside it in `iterate-log.md` or `<thing>.iterate-log.md`.
 | A spec, but no section for this flow | Step 1 for the flow only: reuse the spec's shared parts. |
 | A spec with this flow ("run it again") | Step 1 with the Rerun column, then "Rerun a flow" in Step 2. |
 | A run under way ("continue", and the Run state doesn't say it ended) | Read the Run state, the Checkpoint, and the latest entry. Fill what the log lacks (Step 2) and leave the spec alone. If the Checkpoint shows a round in hand, pick it up as Step 6 says. Otherwise check the stop rules in Step 7, and if none holds, go on from Step 4, launching as the Checkpoint says. |
-| "Review X", "what's wrong with X", or a lens named without a target or rounds ("review the styling") | Step 1 with a **report only** budget: one round, no fixes. |
+| Any review the user asks for through iterate by name, including of code or a pull request; or, with iterate not named, a review that names a lens or point of view without a target or rounds ("review the styling", "review this as a new hire") and isn't of code or a pull request | Step 1 with a **report only** budget: one round, no fixes. |
+| Any other review, with iterate not named: a bare "review X" or "what's wrong with X" with no lens, flow, or rounds, or a review of code or a pull request | A quick opinion, not an iterate job: answer it directly, with no spec, brief, log, or score, and offer a report-only round if the user wants a score they can rerun. Send a review of code or a pull request to the project's own review tool or skill when it has one. |
 | "Make this better" without rounds | Step 1, offering the best-fitting flow with the default budget, and a single pass as the alternative. |
 | A single defect with a clear done state | Say in one line it isn't an iterate job, then reproduce, fix, and verify it as usual; deploying the fix to a live thing still needs a go-ahead. If a spec exists, offer to add a line to its Checks that would catch it, and to the thing's own test tool if it has one. |
 
 When more than one row fits, ask every field any matching column asks, skipping what the
 spec already answers. Where one column narrows a field ("if new", "if missing", "In scope
-changes", "report only"), the narrow form wins: a review named with no target or rounds is
+changes", "report only"), the narrow form wins: a lens review with no target or rounds is
 report only even when the spec lacks the flow, so don't ask for a target or publishing. A
 report-only run still writes the flow's section, brief, and log. A **single pass** is done
 by you, not a fresh evaluator, with no spec, brief, log, or score: review the thing once
@@ -259,10 +260,11 @@ stage the Checkpoint records, and repeats only what it can't confirm:
   - Running: wait for it.
   - Finished: take its report from the tool's record.
   - Never started, or failed without a usable report: brief a fresh one, once.
-  - The tool can't tell: write that in the Checkpoint and don't brief another, since it
-    could be a duplicate. Count it as returning no report: log the round as incomplete,
-    with the strongest evaluator whose report is in hand as that round's primary. With no
-    report in hand, end the run under rule 7.
+  - The tool can't tell, or has no record of it (a tool may not see what another session
+    launched): write that in the Checkpoint and don't brief another, since it could be a
+    duplicate. Count it as returning no report: log the round as incomplete, with the
+    strongest evaluator whose report is in hand as that round's primary. With no report in
+    hand, end the run under rule 7.
 
   Reports for another version, with no fix logged since, don't count: log that and run
   the round again.

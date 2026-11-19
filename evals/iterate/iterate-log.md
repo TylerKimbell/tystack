@@ -271,3 +271,40 @@ last entry below logs a break, so the next scored round is a new baseline.
     Checks section now says the script covers fixtures, not every file the spec names.
   - **Break in comparability:** the brief's Settled decisions line now points to the
     spec's section, as the brief template does. The next scored round is a new baseline.
+- **2026-11-18: review routing narrowed, and the resume and stop rules made testable.** Not
+  yet scored.
+  - Skill: report only is now for a review that names a lens or a point of view, or any
+    review asked for through iterate by name. A bare "review X" or "what's wrong with X"
+    is a quick opinion, answered directly with an offer of a report-only round; a review
+    of code or a pull request goes to the project's own review tool or skill when it has
+    one. The combine-rows paragraph and the Step 1 table's column ("Report only", was
+    "Review") follow.
+  - Skill: "Pick up a round in hand" now says a tool with no record of an evaluator counts
+    as "can't tell", since a tool may not see what another session launched. Before, "no
+    record" could read as "never started", which briefs a possible duplicate.
+  - Test: scenario 8 resumes a round in hand at "evaluators launched", with
+    `fixtures/resume-spec.md` and `fixtures/resume-log.md` in the current layout. Scenario
+    6 now says the page's history holds the starting version, so the before-and-after
+    comparison can run. The progress fixture's Settled decisions now hold round 5's
+    reply-length decision, pending the owner.
+  - Test: `answers.md`, a runner-only key with the expected outcome for scenarios 5 to 8.
+    After the reports return, the runner compares each evaluator's answers with it and
+    logs each mismatch in the round's entry. `check.py` fails if it is missing or lacks
+    a scenario.
+  - The brief now covers eight scenarios, asks what happens to the round in hand in
+    scenario 8, and tells evaluators not to open `answers.md`; the questions ask about
+    picking up a round in hand.
+  - Under the current rule text, scenario 6 stops under rules 3 and 6. Rounds 5 to 10
+    named rules 3 and 5 under an older numbering; rule 5 no longer holds there, since
+    round 13 applied a [direct][low] fix.
+  - [open] The plateau and progress fixtures stay in the older layout (log inside the
+    spec, no Run state or Checkpoint). On a run under way the skill says to fill only the
+    log and leave the spec alone, but it also lists moving an inline log out as an
+    addition; the key doesn't score how scenarios 6 and 7 handle this.
+  - After review: the two review rows both claimed a review of code or a pull request
+    asked for through iterate by name. Naming iterate now takes the report-only row, and
+    the other row says iterate isn't named. Scenario 9 sends a bare review and a review
+    from a point of view, which route differently, so `answers.md` covers scenarios 5 to 9
+    and the brief covers nine scenarios.
+  - **Break in comparability:** a new scenario, changed fixtures, and a changed brief and
+    questions. The next scored round is a new baseline.
