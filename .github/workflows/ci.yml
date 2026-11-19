@@ -41,8 +41,10 @@ jobs:
           exit "$failed"
 
       # The validator needs no sign-in. Its version is not pinned, so the manifests are
-      # checked against the rules Claude Code applies now.
+      # checked against the rules Claude Code applies now. The log names the version, so
+      # a run that changes with no change to the manifests can be traced to a release.
       - name: Validate the plugin manifests
         run: |
           npm install --global @anthropic-ai/claude-code
+          claude --version
           claude plugin validate .
