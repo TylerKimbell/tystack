@@ -43,6 +43,7 @@ summarized, and the transcript has everything.
 python3 <skill dir>/scripts/digest.py --out <scratch dir>/digest.md            # this session
 python3 <skill dir>/scripts/digest.py --list                                   # find another by title
 python3 <skill dir>/scripts/digest.py <id or local_ id or path> --out <scratch dir>/digest.md
+python3 <skill dir>/scripts/digest.py --turns 9-11 --results 2000              # with tool output
 ```
 
 It takes a transcript path, a transcript id from `--list`, or, on macOS, a desktop app
@@ -97,6 +98,13 @@ For the chosen thread, write down what the transcript shows, citing turn numbers
   session's own data to check it reproduces the session's results. Files in scratch or
   temp folders can be cleared at any time, so say so if one is at risk.
 - **Open at the end:** questions the session asked that nobody answered.
+
+The digest shows that a tool ran, not what it returned. When a finding rests on the
+output (a check's result, a number the session measured, a helper agent's report, the
+page a step read), rerun the digest for those turns with `--results 2000`. That prints
+each call's output under its line, clipped to that many characters; `--results 0` prints
+all of it. Keep `--turns` on the rerun, since output is most of a transcript's size. If the
+output isn't in the transcript either, the finding is a gap.
 
 Use only what the transcript shows. Where you infer, say so. A gap stays a gap and becomes
 an open question in the proposal. If the session stopped before the method's last step

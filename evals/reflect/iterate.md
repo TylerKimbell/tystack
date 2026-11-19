@@ -42,6 +42,9 @@ which git ignores. They hold private data and never leave this machine. Someone 
 this flow elsewhere supplies their own sessions of the same kinds and lists them in
 `local/sessions.md`.
 
+- `fixtures/sample-session.jsonl`: an invented three-turn session, tracked, that
+  `check.py` runs `digest.py` on in every clone. It is for the checks, not for a scenario:
+  no round scores a skill made from it.
 - `local/sessions.md`: which frozen transcript belongs to which scenario, the title the
   user would call each session by, and the held-out material.
 - `local/sessions/`: the four fixture transcripts, and helper transcripts for one of them.
@@ -62,10 +65,13 @@ read-only. No agent sends, publishes, commits, pushes, or changes a scheduled ta
 Run `python3 evals/reflect/check.py` from the repository root before every round. It
 checks reflect's frontmatter (name, description under 1024 characters), that
 `agents/openai.yaml` names `$reflect`, that the plugin manifests parse, that the README
-has a row for reflect, that `digest.py` compiles and digests every fixture transcript into
-at least one turn with a files section, that `local/` is ignored and nothing in it is
-tracked, and that the run log lives only in `iterate-log.md`. In a clone with no `local/`
-folder it skips the fixture checks and says so; supply the fixtures before a round.
+has a row for reflect, that `digest.py` compiles, that its digest of
+`fixtures/sample-session.jsonl` keeps the turns, answers, errors, and written files and
+leaves tool output out until `--results` asks for it, that it digests every private
+fixture transcript into at least one turn with a files section, that `local/` is ignored
+and nothing in it is tracked, and that the run log lives only in `iterate-log.md`. In a
+clone with no `local/` folder it skips the private fixture checks and says so; supply
+those fixtures before a round.
 
 ---
 
