@@ -8,7 +8,7 @@ skeletons, the flow cards that fill the spec, and the brief template for Step 4.
 One message, with every field the route uses filled in or drafted. Leave out fields the
 route doesn't use.
 
-| Field | No spec | New flow on a spec | Rerun | Review | Make it better |
+| Field | No spec | New flow on a spec | Rerun | Report only | Make it better |
 |---|---|---|---|---|---|
 | The thing | yes | if new | if missing | yes | yes |
 | Where the spec will live | if unclear | | | if unclear | if unclear |

@@ -3,7 +3,7 @@
 The spec for improving `skills/iterate/SKILL.md` with the iterate skill itself. Claude never
 loads this file as part of the skill; it's here so anyone working on the skill can rerun the
 same flows and compare scores. The run log and Run state are in `iterate-log.md` beside it,
-which evaluators never read.
+and the expected outcomes for some scenarios are in `answers.md`; evaluators read neither.
 
 ## The thing
 
@@ -36,6 +36,10 @@ renaming it, changing the flow model, or changing the report format.
 - `fixtures/sample-prompt.md`: a short prompt to improve, for scenario 3.
 - `fixtures/plateau-spec.md`: a long run that has stalled, for scenario 6.
 - `fixtures/progress-spec.md`: a long run that is still making progress, for scenario 7.
+- `fixtures/resume-spec.md` and `fixtures/resume-log.md`: a spec in the current layout and
+  its run log, with a round in hand at the stage "evaluators launched", for scenario 8.
+- `answers.md`: the expected outcome for scenarios 5 to 8, for the runner only. After the
+  reports return, the runner compares each evaluator's answers with it, as the file says.
 - A scratch folder for the evaluator's output: a new empty temporary folder each round,
   outside this repository. That's the reset; nothing in the repository changes during a
   round.
@@ -46,7 +50,8 @@ Run `python3 evals/iterate/check.py` from the repository root before every round
 that the skill's frontmatter has the right name and a description under 1024 characters,
 that `templates.md` exists and the skill mentions it, that the plugin manifests are valid
 JSON, that the README has a row for the skill, that every fixture this spec names exists,
-and that the run log lives only in `iterate-log.md`.
+that the run log lives only in `iterate-log.md`, and that `answers.md` exists with a section
+for each of scenarios 5 to 8.
 
 ---
 
@@ -80,11 +85,18 @@ another scenario says about the same page.
    `fixtures/existing-spec.md` as the page's spec.
 5. **Not iterate's job.** "The Save button on the onboarding page throws an error. Fix it."
 6. **A stalled long run.** You are partway through a run on the onboarding page with
-   `fixtures/plateau-spec.md` as its spec. Round 13 has just been logged. Decide what
-   happens next.
+   `fixtures/plateau-spec.md` as its spec. Round 13 has just been logged. The page's
+   history holds every version since before round 1. Decide what happens next.
 7. **A long run still improving.** You are partway through a run on the support prompt with
    `fixtures/progress-spec.md` as its spec. Round 6 has just been logged. Decide what
    happens next.
+8. **Picking up a round in hand.** A new session gets "Continue the returns handbook run,"
+   with `fixtures/resume-spec.md` as the spec and `fixtures/resume-log.md` as its run log.
+   Facts you can't look up: the handbook and both test files still match the hashes the
+   Checkpoint records; the saved `sonnet` report exists and names the recorded handbook
+   hash; no `opus` report is saved anywhere; and asked about the `opus` evaluator, the tool
+   that launches evaluators has no record of it, because it can't see subagents an earlier
+   session launched. Decide what happens to round 4.
 
 ### Questions at each scenario
 
@@ -94,7 +106,8 @@ another scenario says about the same page.
 - Did the skill handle this request the right way: run it, ask first, reuse the spec, or say
   it isn't the right tool?
 - In a run already under way: does the skill say clearly whether to continue or stop, and
-  does it keep going without checking in with the user while it is still making progress?
+  how to pick up a round in hand, and does it keep going without checking in with the user
+  while it is still making progress?
 
 ### Rubric
 
@@ -135,14 +148,14 @@ The runner adds two lines at the top: the repository root and the scratch folder
 > **Read**, with paths relative to the repository root:
 > - `skills/iterate/SKILL.md`, the version on disk now, and any file it tells you to load.
 > - `evals/iterate/iterate.md`: the shared part (The thing, Guardrails, Fixtures, Checks)
->   and the "Flow: dry run" section. Don't open `evals/iterate/iterate-log.md`; form your
->   own view.
+>   and the "Flow: dry run" section. Don't open `evals/iterate/iterate-log.md` or
+>   `evals/iterate/answers.md`; form your own view.
 > - The fixtures in `evals/iterate/fixtures/` when a scenario names them.
 >
 > Don't run rounds, spawn subagents, open a browser, or use any tool other than reading
 > files and writing in the scratch folder.
 >
-> **For each of the seven scenarios** in the dry-run section, follow the skill as if the
+> **For each of the eight scenarios** in the dry-run section, follow the skill as if the
 > user had just sent that request, and write `scenario-N.md` in the scratch folder with:
 > 1. The questions you'd ask the user before starting, or "none" and why.
 > 2. The spec you'd write for the flow (for scenario 4, what you'd change in the existing
@@ -150,10 +163,11 @@ The runner adds two lines at the top: the repository root and the scratch folder
 > 3. The round-1 brief you'd send the evaluator.
 > 4. **Guesses:** every place the skill left you guessing, and what you guessed.
 >
-> For scenario 5, write what you'd do instead. For scenarios 6 and 7, a run is already under
-> way: write what you do after the last logged round and why, naming any rule you apply.
-> If you stop, write the final summary. If you continue, say what the next round does and
-> whether you contact the user. Where a scenario needs facts you don't have, such as the
+> For scenario 5, write what you'd do instead. For scenarios 6 to 8, a run is already under
+> way: write what you do next and why, naming any rule you apply. For scenario 8, say what
+> happens to the round in hand and to each evaluator's report. If you stop, write the final
+> summary. If you continue, say what the next step or round does and whether you contact
+> the user. Where a scenario needs facts you don't have, such as the
 > page itself, invent a plausible stand-in and mark it as invented.
 >
 > **Then report, in about 700 words:**
