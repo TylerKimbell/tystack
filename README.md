@@ -85,6 +85,8 @@ Each skill is a `SKILL.md`, plus supporting files it loads (such as `iterate`'s 
 
 `evals/<skill>/` holds the `iterate` spec, fixtures, and checks for improving a skill with `iterate`. Claude never loads these files as part of a skill. Run `python3 evals/<skill>/check.py` before each round.
 
+CI runs every `evals/<skill>/check.py` and `claude plugin validate .` on each push and pull request.
+
 ## License
 
 MIT. `unslop`, `technical-writing`, and `bro` are adapted from [backnotprop/pstack](https://github.com/backnotprop/pstack) (MIT, Copyright (c) 2026 Lauren Tan). See [LICENSE](LICENSE).
