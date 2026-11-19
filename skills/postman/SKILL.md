@@ -73,6 +73,21 @@ payload as ready to run.
 
 - Collection v2.1: `info.name`, `info._postman_id`, the v2.1 schema URL, and `item`.
 - Prefer inherited collection auth. Keep services with different credentials separate.
+- Know what a request inherits. With no `auth` of its own it takes its folder's, then its
+  collection's; `noauth` turns auth off for that request. Collection and folder scripts
+  run before the request's own. Collection variables stay with their collection and do
+  not move with a folder. In a supplemental collection:
+  - Leave `auth` off the new requests, so they take the original's once the folder moves.
+  - When you know the original's auth setup, repeat it at the supplemental collection's
+    level with the same variable names, never the values, so the folder also runs before
+    the move. When you don't, say that the requests have no auth until moved.
+  - Put each new variable in the environment, or list it as a collection variable to add
+    to the original. One defined only in the supplemental collection is lost in the move.
+  - If the new requests depend on a script the original runs at collection or folder
+    level, such as one that signs requests or refreshes a token, say they work only
+    after the move.
+- When editing an export, keep each request's own `auth`, including `noauth`, and add
+  none to a request that inherits.
 - Use `{{variables}}` for credentials and real environment identifiers. Reuse existing
   variables, add only necessary inputs, and never overwrite a populated environment.
 - List operations: small page size and the API's own pagination parameters, with a note
@@ -83,6 +98,15 @@ payload as ready to run.
 - JSON bodies: raw mode, `options.raw.language: json`, and a `Content-Type` header.
   Keep numbers and booleans unquoted when substituting variables. Omit the body when the
   endpoint takes none.
+- `body.raw` is a string inside the collection's JSON. Build the body, serialize it, and
+  let the serializer that writes the collection escape that string. Never escape quotes,
+  backslashes, or line breaks by hand.
+- Postman pastes a variable's value into the body unchanged. A value that can hold a
+  quote, a backslash, or a line break (free text, a file path, JSON carried as a string)
+  breaks a quoted `"{{note}}"`. Say in the request description that the value must be
+  JSON-escaped. When the workflow needs arbitrary text, add a pre-request script that
+  sets an escaped copy and use that variable in the body. A variable that holds a whole
+  object or array goes in unquoted.
 - Descriptions state prerequisites, effects, required permissions, sources, and a
   concrete response check. Label mutations with the user's convention, or `[WRITE]`.
 - Omit saved responses and scripts unless needed. Add variable capture, assertions, or
@@ -99,8 +123,11 @@ payload as ready to run.
    including declared query parameters, required and writable fields, and body types.
    A matching name or method alone is not enough.
 3. Account for every `{{variable}}`: existing environment or collection variables,
-   Postman dynamic variables, or a listed new input. Render templated JSON bodies with
-   typed sample values and parse them. Check request order and ID handoffs.
+   Postman dynamic variables, or a listed new input. For a supplemental collection,
+   check where each resolves after the folder moves: the environment or the original's
+   collection variables. Render templated JSON bodies with typed sample values and parse
+   them. For each variable that takes free text, confirm the description or a script
+   covers escaping. Check request order and ID handoffs.
 4. When editing a supplied export, diff it to confirm unrelated configuration is unchanged.
 5. Scan shareable files for credentials and real identifiers, which colleagues may
    receive: run the project's scanner if it names one; otherwise search for tokens,
