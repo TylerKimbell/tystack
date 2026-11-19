@@ -46,8 +46,9 @@ this flow elsewhere supplies their own sessions of the same kinds and lists them
   `check.py` runs `digest.py` on in every clone. It is for the checks, not for a scenario:
   no round scores a skill made from it.
 - `fixtures/app-session.jsonl`: a second invented session, tracked and for the checks
-  only, recorded the way an app built on the Agent SDK records one. Each of its three
-  user messages is marked as sent through the SDK.
+  only, recorded the way an app built on the Agent SDK records one. Its three prompts are
+  marked as sent through the SDK. So are a reminder, a task notice, and a slash command,
+  which are not prompts.
 - `local/sessions.md`: which frozen transcript belongs to which scenario, the title the
   user would call each session by, and the held-out material.
 - `local/sessions/`: the four fixture transcripts, and helper transcripts for one of them.

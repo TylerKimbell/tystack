@@ -145,17 +145,24 @@ def is_human(rec):
 # A slash command or its local output, which the transcript records as a user message.
 COMMAND = re.compile(r"^<(command-name|command-message|local-command-)")
 
+# A block the harness adds to a user record: a reminder, a task notice, an event. Its
+# tag name has a hyphen, which sets it apart from markup a user pastes.
+INJECTED = re.compile(r"<([a-z]+(?:-[a-z]+)+)\b[^>]*>.*?</\1>", re.S)
+
 SDK_LABEL = "prompt sent through the SDK"
 
 
 def is_sdk_prompt(rec):
     """True for a prompt sent through the Agent SDK. An app built on Claude Code records
     what its user typed this way, and a script records the prompt it supplied, so every
-    one of them starts a turn."""
+    one of them starts a turn. A record that holds only blocks the harness added is not
+    a prompt, though it carries the same tag."""
     if not is_prompt(rec) or rec.get("origin") or rec.get("turnOrigin") != "sdk":
         return False
-    text = REMINDER.sub("", text_of(rec["message"]["content"])).strip()
-    return bool(text) and not COMMAND.match(text)
+    text = text_of(rec["message"]["content"])
+    if COMMAND.match(REMINDER.sub("", text).strip()):
+        return False
+    return bool(INJECTED.sub("", text).strip())
 
 
 def opener_label(rec):

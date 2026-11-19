@@ -95,3 +95,9 @@ run). Fixes: uncommitted in the tystack working tree.
   order, each labelled with its tool and what the call was for, and an error is never
   clipped shorter than the default 300 characters. `fixtures/sample-session.jsonl`, an
   invented session, lets `check.py` test the digest in every clone. Not scored.
+- **2026-11-19, outside a run.** The digest dropped every prompt after the first in a
+  session run through an app built on the Agent SDK, which tags them `turnOrigin: "sdk"`.
+  Each one now starts a turn headed "prompt sent through the SDK", a compaction summary is
+  no longer a turn, a record that holds only blocks the harness added is left out, and a
+  slash command's line keeps its arguments. `fixtures/app-session.jsonl`, a second
+  invented session, tests this in every clone. Not scored.

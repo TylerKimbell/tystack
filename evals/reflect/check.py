@@ -145,7 +145,7 @@ else:
     ):
         if code or want not in app:
             failures.append(f"digest of the app session lacks {why}")
-    for leak in ("SUMMARY-ONLY", "META-ONLY", "REMINDER-ONLY", "<command-"):
+    for leak in ("SUMMARY-ONLY", "META-ONLY", "REMINDER-ONLY", "BLOCK-ONLY", "<command-"):
         if leak in app:
             failures.append(f"digest of the app session should leave out {leak!r}")
 
